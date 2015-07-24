@@ -97,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager.getViewPager().setCurrentItem(0);
 
+        Intent intent = new Intent(this, PlayerActivity.class);
+        startActivity(intent);
+
         final BottomSheet.Builder bottomsheet = new BottomSheet.Builder(this)
             .title("Create a New Game...")
             .sheet(R.menu.menu_new_game)
@@ -110,8 +113,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
 
-                Intent intent = new Intent(this, PlayerActivity.class);
-                startActivity(intent);
+
             });
 
         final ButtonFloat newGame = (ButtonFloat)findViewById(R.id.newgame);
