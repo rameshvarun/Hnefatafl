@@ -97,11 +97,9 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.getViewPager().setCurrentItem(0);
 
         final BottomSheet.Builder bottomsheet = new BottomSheet.Builder(this)
-                .title("Create a New Game...")
-                .sheet(R.menu.menu_new_game)
-                .listener(new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int item) {
+            .title("Create a New Game...")
+            .sheet(R.menu.menu_new_game)
+            .listener((DialogInterface dialog, int item) -> {
                 switch (item) {
                     case R.id.action_pass_and_play:
                         break;
@@ -110,18 +108,12 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_player_vs_ai:
                         break;
                 }
-            }
-        });
+            });
 
         final ButtonFloat newGame = (ButtonFloat)findViewById(R.id.newgame);
-        newGame.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bottomsheet.show();
-            }
+        newGame.setOnClickListener((View v) -> {
+            bottomsheet.show();
         });
-
-
     }
 
     @Override
