@@ -34,12 +34,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    sourceSets {
+        main {
+            assets.srcDir 'src/main/assets'
+            jniLibs.srcDir 'src/main/libs'
+        }
+
+        instrumentTest.setRoot('tests')
+    }
 }
 
 repositories {
     jcenter()
     mavenCentral()
 }
+
+configurations { natives }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -49,8 +60,40 @@ dependencies {
     compile 'org.pcollections:pcollections:2.1.2'
     compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.cocosw:bottomsheet:1.+@aar'
-
     compile ('com.github.florent37:materialviewpager:1.0.8@aar'){
         transitive = true
+    }
+
+    // LibGDX libraries
+    compile "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
+    compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+    natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
+    natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
+}
+
+// called every time gradle gets executed, takes the native dependencies of
+// the natives configuration, and extracts them to the proper libs/ folders
+// so they get packed with the APK.
+task copyAndroidNatives() {
+    file("src/main/libs/armeabi/").mkdirs();
+    file("src/main/libs/armeabi-v7a/").mkdirs();
+    file("src/main/libs/x86/").mkdirs();
+
+    configurations.natives.files.each { jar ->
+        def outputDir = null
+        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("src/main/libs/armeabi-v7a")
+        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("src/main/libs/armeabi")
+        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("src/main/libs/x86")
+        if(outputDir != null) {
+            copy {
+                from zipTree(jar)
+                into outputDir
+                include "*.so"
+            }
+        }
     }
 }

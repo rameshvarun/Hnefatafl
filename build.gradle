@@ -15,5 +15,14 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    }
+
+    version = '1.0'
+    ext {
+        appName = 'hnefatafl'
+        gdxVersion = '1.6.4'
     }
 }

@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.preference.PreferenceActivity;
@@ -108,6 +109,9 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.action_player_vs_ai:
                         break;
                 }
+
+                Intent intent = new Intent(this, PlayerActivity.class);
+                startActivity(intent);
             });
 
         final ButtonFloat newGame = (ButtonFloat)findViewById(R.id.newgame);
