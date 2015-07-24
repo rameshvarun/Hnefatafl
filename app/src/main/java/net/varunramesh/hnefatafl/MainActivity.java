@@ -1,5 +1,6 @@
 package net.varunramesh.hnefatafl;
 
+import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.preference.PreferenceActivity;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
@@ -94,15 +96,32 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager.getViewPager().setCurrentItem(0);
 
-        //final MenuSheetView createGameMenu = new MenuSheetView();
+        final BottomSheet.Builder bottomsheet = new BottomSheet.Builder(this)
+                .title("Create a New Game...")
+                .sheet(R.menu.menu_new_game)
+                .listener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                switch (item) {
+                    case R.id.action_pass_and_play:
+                        break;
+                    case R.id.action_online_match:
+                        break;
+                    case R.id.action_player_vs_ai:
+                        break;
+                }
+            }
+        });
 
         final ButtonFloat newGame = (ButtonFloat)findViewById(R.id.newgame);
         newGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                bottomsheet.show();
             }
         });
+
+
     }
 
     @Override

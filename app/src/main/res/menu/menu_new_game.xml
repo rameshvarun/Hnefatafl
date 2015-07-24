@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_online_match" android:title="Online Match" android:icon="@drawable/ic_public_black_48dp" />
+    <item android:id="@+id/action_pass_and_play" android:title="Pass and Play" android:icon="@drawable/ic_group_black_48dp" />
+    <item android:id="@+id/action_player_vs_ai" android:title="Player vs. AI" android:icon="@drawable/ic_computer_black_48dp" />
+</menu>
