@@ -163,8 +163,6 @@ public final class Board implements Saveable {
         }
 
         throw new UnsupportedOperationException();
-
-        return actions;
     }
 
     public Set<Map.Entry<Position, Piece>> getPieces() {
