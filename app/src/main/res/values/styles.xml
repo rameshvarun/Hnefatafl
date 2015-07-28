@@ -23,6 +23,9 @@
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="21">true</item>
 
         <item name="android:actionMenuTextColor">@android:color/black</item>
+
+        <!-- Alert Dialog Theme -->
+        <item name="alertDialogProTheme">@style/Theme.AlertDialogPro.Material.Light</item>
     </style>
 
     <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">

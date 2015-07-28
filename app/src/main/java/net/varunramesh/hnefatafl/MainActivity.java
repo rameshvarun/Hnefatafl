@@ -18,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.alertdialogpro.AlertDialogPro;
+import com.badlogic.gdx.Game;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.github.florent37.materialviewpager.MaterialViewPager;
@@ -33,6 +35,7 @@ import com.google.example.games.basegameutils.BaseGameActivity;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import net.varunramesh.hnefatafl.simulator.GameState;
+import net.varunramesh.hnefatafl.simulator.Player;
 
 public class MainActivity extends BaseGameActivity {
 
@@ -114,29 +117,33 @@ public class MainActivity extends BaseGameActivity {
             .title("Create a New Game...")
             .sheet(R.menu.menu_new_game)
             .listener((DialogInterface dialog, int item) -> {
-                Intent intent;
-                GameState gameState;
                 switch (item) {
-                    case R.id.action_pass_and_play:
-                        gameState = new GameState(GameState.GameType.PASS_AND_PLAY);
-                        intent = new Intent(this, PlayerActivity.class);
+                    case R.id.action_pass_and_play: {
+                        GameState gameState = new GameState(GameState.GameType.PASS_AND_PLAY);
+                        Intent intent = new Intent(this, PlayerActivity.class);
                         intent.putExtra("GameState", gameState.toJson().toString());
                         startActivity(intent);
                         break;
-                    case R.id.action_online_match:
-                        if(!isSignedIn()) {
+                    }
+                    case R.id.action_online_match: {
+                        if (!isSignedIn()) {
                             beginUserInitiatedSignIn();
                         } else {
-                            intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(getApiClient(), 1, 1, true);
+                            Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(getApiClient(), 1, 1, true);
                             startActivityForResult(intent, RC_SELECT_PLAYERS);
                         }
                         break;
-                    case R.id.action_player_vs_ai:
-                        gameState = new GameState(GameState.GameType.PLAYER_VS_AI);
-                        intent = new Intent(this, PlayerActivity.class);
-                        intent.putExtra("GameState", gameState.toJson().toString());
-                        startActivity(intent);
+                    }
+                    case R.id.action_player_vs_ai: {
+                        showSidePickDialog((DialogInterface sideDialog, int which) -> {
+                            Player player = (which == 0) ? Player.ATTACKER : Player.DEFENDER;
+                            GameState gameState = new GameState(GameState.GameType.PLAYER_VS_AI);
+                            Intent intent = new Intent(this, PlayerActivity.class);
+                            intent.putExtra("GameState", gameState.toJson().toString());
+                            startActivity(intent);
+                        });
                         break;
+                    }
                 }
             });
 
@@ -144,6 +151,18 @@ public class MainActivity extends BaseGameActivity {
         newGame.setOnClickListener((View v) -> {
             bottomsheet.show();
         });
+    }
+
+    private void showSidePickDialog(DialogInterface.OnClickListener startListener) {
+        AlertDialogPro.Builder builder = new AlertDialogPro.Builder(this);
+        builder.setTitle("Pick A Side...")
+                .setSingleChoiceItems(
+                        new String[]{"Attacker", "Defender"},
+                        0, null
+                )
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Start", startListener)
+                .show();
     }
 
     @Override
