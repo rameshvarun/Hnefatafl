@@ -9,7 +9,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import org.pcollections.HashTreePMap;
+import org.pcollections.HashTreePSet;
+import org.pcollections.MapPSet;
 import org.pcollections.PMap;
+import org.pcollections.PSet;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -58,6 +61,7 @@ public final class Board implements Saveable {
         this.currentPlayer = currentPlayer;
     }
 
+    /** Get the number of pieces currently on the board */
     public int getNumberOfPieces() {
         return pieces.size();
     }
@@ -83,10 +87,68 @@ public final class Board implements Saveable {
         return board;
     }
 
+    /** Check if a position is inside the board */
+    public boolean contains(Position position) {
+        return position.getX() >= 0 && position.getY() >= 0 &&
+                position.getX() < 11 && position.getY() < 11;
+    }
+
+    /** Returns true if the square is a King-Only Square */
+    public boolean isKingOnlySquare(Position pos) {
+        return CENTER_SQUARE.equals(pos) || getRefugeeSquares().contains(pos);
+    }
+
+    /** Get all of the actions that the piece at the given position can take */
+    public Set<Action> getActions(Position position) {
+        assert pieces.containsKey(position);
+
+        Set<Action> actions = new HashSet<>();
+        Piece piece = pieces.get(position);
+
+        // If the current player does not own the piece, return
+        // the empty set.
+        if(!PlayerOwnsPiece(currentPlayer, piece)) return actions;
+
+        for(Direction dir : Direction.values()) {
+            for(Position pos = position.getNeighbor(dir); contains(pos); pos = pos.getNeighbor(dir)) {
+                if(pieces.containsKey(pos)) break;
+                else {
+                    if(piece.getType() != Piece.Type.KING && isKingOnlySquare(pos))
+                        continue;
+                    actions.add(new Action(currentPlayer, position, pos));
+                }
+            }
+        }
+        return actions;
+    }
+
+    /** Get all of the actions that the given player can take. */
+    public Set<Action> getActions(Player player) {
+        Set<Action> actions = new HashSet<>();
+        for(Map.Entry<Position, Piece> piece : pieces.entrySet()) {
+            if (PlayerOwnsPiece(player, piece.getValue()))
+                actions.addAll(getActions(piece.getKey()));
+        }
+        return actions;
+    }
+
+    /** Get all of the actions that the curent player can take. */
+    public Set<Action> getActions() {
+        return getActions(currentPlayer);
+    }
+
+    public Set<Map.Entry<Position, Piece>> getPieces() {
+        return pieces.entrySet();
+    }
+
     /* Static Methods and Variables */
     public static final int BOARD_SIZE = 11;
     public static PMap<Position, Piece> START_CONFIGURATION = createStartConfiguration();
 
+    public static Position CENTER_SQUARE = new Position(5, 5);
+    public static final PSet<Position> REFUGEE_SQUARES = getRefugeeSquares();
+
+    /** Constructs the starting configuration of pieces on the board */
     private static PMap<Position, Piece> createStartConfiguration() {
         Map<Position, Piece> pieces = new HashMap<Position, Piece>();
 
@@ -141,31 +203,21 @@ public final class Board implements Saveable {
         return HashTreePMap.from(pieces);
     }
 
-    public Set<Action> getActions(Position position) {
-        assert pieces.containsKey(position);
-
-        Set<Action> actions = new HashSet<>();
-        Piece piece = pieces.get(position);
-
-        // If the current player is the attacker and the piece is a defender,
-        // return an empty set.
-        if(currentPlayer == Player.ATTACKER &&
-                (piece.getType() == Piece.Type.KING ||
-                        piece.getType() == Piece.Type.ATTACKER)) {
-            return actions;
-        }
-
-        // If the current player is the defender and the peice is a defender,
-        // return the empty set.
-        if(currentPlayer == Player.DEFENDER &&
-                (piece.getType() == Piece.Type.ATTACKER)) {
-            return actions;
-        }
-
-        throw new UnsupportedOperationException();
+    private static PSet<Position> getRefugeeSquares() {
+        Set<Position> squares = new HashSet<>();
+        squares.add(new Position(0, 0));
+        squares.add(new Position(10, 0));
+        squares.add(new Position(0, 10));
+        squares.add(new Position(10, 10));
+        return HashTreePSet.from(squares);
     }
 
-    public Set<Map.Entry<Position, Piece>> getPieces() {
-        return pieces.entrySet();
+    public static boolean PlayerOwnsPiece(Player player, Piece.Type piece) {
+        return (player == Player.ATTACKER && piece == Piece.Type.ATTACKER)
+                || (player == Player.DEFENDER && (piece == Piece.Type.DEFENDER || piece == Piece.Type.KING));
+    }
+
+    public static boolean PlayerOwnsPiece(Player player, Piece piece) {
+        return PlayerOwnsPiece(player, piece.getType());
     }
 }

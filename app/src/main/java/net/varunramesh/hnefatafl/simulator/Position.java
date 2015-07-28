@@ -30,6 +30,20 @@ public final class Position implements Saveable {
     public int getX() { return x; }
     public int getY() { return y; }
 
+    public Position getNeighbor(Direction dir) {
+        switch (dir) {
+            case UP:
+                return new Position(x, y + 1);
+            case DOWN:
+                return new Position(x, y - 1);
+            case LEFT:
+                return new Position(x - 1, y);
+            case RIGHT:
+                return new Position(x + 1, y);
+        }
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -52,5 +66,10 @@ public final class Position implements Saveable {
         array.add(new JsonPrimitive(x));
         array.add(new JsonPrimitive(y));
         return array;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
     }
 }

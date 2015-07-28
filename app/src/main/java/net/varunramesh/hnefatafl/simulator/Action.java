@@ -59,4 +59,8 @@ public class Action implements Saveable {
         result = 31 * result + to.hashCode();
         return result;
     }
+
+    public Position getTo() {
+        return to;
+    }
 }
