@@ -1,20 +1,16 @@
 
 buildscript {
-    ext.kotlin_version = '0.12.1218'
     repositories {
         mavenCentral()
     }
 
     dependencies {
         classpath 'me.tatarka:gradle-retrolambda:3.2.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
     }
 }
 
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
-apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 22
@@ -26,9 +22,6 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
-
-        // Enable mulitdex
-        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -49,7 +42,6 @@ android {
         }
 
         instrumentTest.setRoot('tests')
-        main.java.srcDirs += 'src/main/kotlin'
     }
 }
 
@@ -88,11 +80,7 @@ dependencies {
     // Google Play Services
     compile "com.google.android.gms:play-services:6.5+"
 
-    // Multidex
-    compile 'com.android.support:multidex:1.0.0'
-
     compile "com.google.code.gson:gson:2.3.1"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 // called every time gradle gets executed, takes the native dependencies of
