@@ -56,10 +56,8 @@ public class PieceActor extends Actor implements LayerActor {
 
         setWidth(texture.getWidth());
         setHeight(texture.getHeight());
+        setWorldPosition(game.toWorldPosition(boardPos));
 
-        Vector2 worldPosition = game.toWorldPosition(boardPos);
-        setX(worldPosition.x - getWidth() / 2.0f);
-        setY(worldPosition.y - 87.0f);
 
         final PieceActor piece = this;
         this.addListener(new InputListener() {
@@ -101,9 +99,8 @@ public class PieceActor extends Actor implements LayerActor {
                 if(!dragging) {
                     if(touchStartPosition.dst(worldPosition) > DRAG_THRESHOLD)
                         dragging = true;
-                } else {
-                    setX(worldPosition.x); setY(worldPosition.y);
-                }
+                } else
+                    setWorldPosition(worldPosition);
             }
         });
     }
@@ -124,6 +121,11 @@ public class PieceActor extends Actor implements LayerActor {
     public void draw (Batch batch, float parentAlpha) {
         batch.setColor(getColor());
         batch.draw(region, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
+    }
+
+    public void setWorldPosition(Vector2 worldPosition) {
+        setX(worldPosition.x - getWidth() / 2.0f);
+        setY(worldPosition.y - 87.0f);
     }
 
     @Override

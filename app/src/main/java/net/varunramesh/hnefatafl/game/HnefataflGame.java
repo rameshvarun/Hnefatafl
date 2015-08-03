@@ -41,9 +41,13 @@ public class HnefataflGame extends ApplicationAdapter {
     private Stage stage;
     private Camera cam;
 
+    /** What stage in executing a move are we currently in? */
+    public static enum MoveStage {
+
+    }
+
     public HnefataflGame(GameState state) {
         this.state = state;
-
     }
 
     @Override
