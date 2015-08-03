@@ -15,13 +15,13 @@ import net.varunramesh.hnefatafl.simulator.Position;
  */
 public class SelectionMarker extends Actor implements LayerActor {
     private static final String TAG = "SelectionMarker";
-    private static Texture texture;
+    private final Texture texture;
 
     private final TextureRegion region;
     private final Position position;
 
     public SelectionMarker(HnefataflGame game, Position position){
-        if(texture == null) texture = new Texture("selectionmarker.png");
+        texture = new Texture("selectionmarker.png");
         region = new TextureRegion(texture);
         this.position = position;
 

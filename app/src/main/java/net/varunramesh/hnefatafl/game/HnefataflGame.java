@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -41,6 +42,8 @@ public class HnefataflGame extends ApplicationAdapter {
     private Stage stage;
     private Camera cam;
 
+    private FreeTypeFontGenerator fontGenerator;
+
     /** What stage in executing a move are we currently in? */
     public static enum MoveStage {
 
@@ -70,6 +73,8 @@ public class HnefataflGame extends ApplicationAdapter {
         }
 
         cam.position.set(boardActor.getWidth() / 2, boardActor.getHeight() / 2, cam.position.z);
+
+        fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("Norse.otf"));
     }
 
     public Vector2 toWorldPosition(Position position) {
@@ -130,7 +135,7 @@ public class HnefataflGame extends ApplicationAdapter {
     @Override
     public void render () {
         float aspect = (float)stage.getViewport().getScreenWidth() / stage.getViewport().getScreenHeight();
-        Vector2 idealSize = new Vector2(2048, 2048);
+        Vector2 idealSize = new Vector2(2048 + 100, 2048 + 100);
         if(idealSize.x > idealSize.y*aspect)
             stage.getViewport().setWorldSize(idealSize.x, idealSize.x / aspect);
         else
@@ -163,6 +168,7 @@ public class HnefataflGame extends ApplicationAdapter {
 
     @Override
     public void dispose() {
+        fontGenerator.dispose();
         stage.dispose();
     }
 

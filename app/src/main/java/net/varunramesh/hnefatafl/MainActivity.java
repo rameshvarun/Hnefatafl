@@ -10,30 +10,20 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.alertdialogpro.AlertDialogPro;
-import com.badlogic.gdx.Game;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.github.florent37.materialviewpager.MaterialViewPager;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.multiplayer.Invitation;
-import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
-import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
-import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
-import com.google.android.gms.plus.Plus;
 import com.google.example.games.basegameutils.BaseGameActivity;
-import com.google.example.games.basegameutils.BaseGameUtils;
 
+import net.varunramesh.hnefatafl.game.PlayerActivity;
+import net.varunramesh.hnefatafl.nativeplayer.NativePlayer;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.Player;
 
@@ -110,8 +100,8 @@ public class MainActivity extends BaseGameActivity {
 
         mViewPager.getViewPager().setCurrentItem(0);
 
-        //Intent intent = new Intent(this, PlayerActivity.class);
-        //startActivity(intent);
+
+        startActivity(new Intent(this, NativePlayer.class));
 
         final BottomSheet.Builder bottomsheet = new BottomSheet.Builder(this)
             .title("Create a New Game...")

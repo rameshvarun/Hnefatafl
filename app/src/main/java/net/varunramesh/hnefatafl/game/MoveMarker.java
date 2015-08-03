@@ -18,7 +18,7 @@ import net.varunramesh.hnefatafl.simulator.Position;
  */
 public class MoveMarker extends Actor implements LayerActor {
     private static final String TAG = "MovenMarker";
-    private static Texture texture;
+    private final Texture texture;
 
     private final TextureRegion region;
     private final Position position;
@@ -26,7 +26,7 @@ public class MoveMarker extends Actor implements LayerActor {
     private final PieceActor piece;
 
     public MoveMarker(HnefataflGame game, PieceActor piece, Action action) {
-        if(texture == null) texture = new Texture("movemarker.png");
+        texture = new Texture("movemarker.png");
         region = new TextureRegion(texture);
 
         this.action = action;

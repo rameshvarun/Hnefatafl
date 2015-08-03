@@ -13,7 +13,7 @@ import net.varunramesh.hnefatafl.simulator.Position;
 public class BoardActor extends Actor implements LayerActor {
     public static final float SQUARE_SIZE = 2048.0f/11.0f;
 
-    Texture texture = new Texture("gameboard.png");
+    private final Texture texture = new Texture("gameboard.png");
     public BoardActor(){
         setBounds(getX(), getY(), texture.getWidth(), texture.getHeight());
     }

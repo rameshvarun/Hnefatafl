@@ -17,4 +17,6 @@
 
     <color name="text_gray">#8C000000</color>
     <color name="divider_gray">#AAe2e2e2</color>
+
+    <color name="text_shadow">#7F000000</color>
 </resources>

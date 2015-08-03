@@ -1,4 +1,4 @@
-package net.varunramesh.hnefatafl;
+package net.varunramesh.hnefatafl.game;
 
 import android.os.Bundle;
 

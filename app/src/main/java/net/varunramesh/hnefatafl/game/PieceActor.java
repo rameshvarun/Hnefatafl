@@ -24,11 +24,7 @@ public class PieceActor extends Actor implements LayerActor {
     private final String TAG = "PieceActor";
 
     private final TextureRegion region;
-    private Texture texture;
-
-    private static Texture kingTexture;
-    private static Texture defenderTexture;
-    private static Texture attackerTexture;
+    private final Texture texture;
 
     private Position boardPosition;
     private final HnefataflGame game;
@@ -38,17 +34,16 @@ public class PieceActor extends Actor implements LayerActor {
 
         switch(type) {
             case KING:
-                if(kingTexture == null) kingTexture = new Texture("king.png");
-                texture = kingTexture;
+                texture = new Texture("king.png");
                 break;
             case DEFENDER:
-                if(defenderTexture == null) defenderTexture = new Texture("defender.png");
-                texture = defenderTexture;
+                texture = new Texture("defender.png");
                 break;
             case ATTACKER:
-                if(attackerTexture == null) attackerTexture = new Texture("attacker.png");
-                texture = attackerTexture;
+                texture = new Texture("attacker.png");
                 break;
+            default:
+                throw new UnsupportedOperationException();
         }
 
         region = new TextureRegion(texture);
