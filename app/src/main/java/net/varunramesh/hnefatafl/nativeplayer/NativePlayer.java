@@ -12,8 +12,11 @@ import android.widget.TextView;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.google.example.games.basegameutils.BaseGameActivity;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import net.varunramesh.hnefatafl.R;
+import net.varunramesh.hnefatafl.simulator.GameState;
 
 import java.lang.reflect.Method;
 
@@ -22,6 +25,7 @@ import java.lang.reflect.Method;
  */
 public class NativePlayer extends BaseGameActivity {
     public static final String TAG = "NativePlayer";
+    public GameView gameView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,10 +39,19 @@ public class NativePlayer extends BaseGameActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_board);
 
-
+        // Set TextViews to Norse Font
         TextView text = (TextView) findViewById(R.id.textView);
         Typeface tf = Typeface.createFromAsset(getAssets(), "Norse-Bold.otf");
         text.setTypeface(tf);
+
+        // Load GameState from bundle extras.
+        //Bundle extras = getIntent().getExtras();
+        //assert extras.containsKey("GameState");
+        //JsonElement element = (new Gson()).fromJson(extras.getString("GameState"), JsonElement.class);
+        GameState gameState = new GameState(GameState.GameType.PASS_AND_PLAY);
+
+        gameView = (GameView)findViewById(R.id.gameview);
+        gameView.setBoardConfiguration(gameState.currentBoard());
     }
 
     @Override

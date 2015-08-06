@@ -135,7 +135,7 @@ public class HnefataflGame extends ApplicationAdapter {
     @Override
     public void render () {
         float aspect = (float)stage.getViewport().getScreenWidth() / stage.getViewport().getScreenHeight();
-        Vector2 idealSize = new Vector2(2048 + 100, 2048 + 100);
+        Vector2 idealSize = new Vector2(2048, 2048 + 100);
         if(idealSize.x > idealSize.y*aspect)
             stage.getViewport().setWorldSize(idealSize.x, idealSize.x / aspect);
         else

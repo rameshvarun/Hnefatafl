@@ -101,8 +101,6 @@ public class MainActivity extends BaseGameActivity {
         mViewPager.getViewPager().setCurrentItem(0);
 
 
-        startActivity(new Intent(this, NativePlayer.class));
-
         final BottomSheet.Builder bottomsheet = new BottomSheet.Builder(this)
             .title("Create a New Game...")
             .sheet(R.menu.menu_new_game)
