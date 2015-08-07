@@ -66,6 +66,10 @@ public final class Board implements Saveable {
         return pieces.size();
     }
 
+    public Board takeAction(Action action, EventHandler eventHandler) {
+        assert action.getPlayer() == currentPlayer;
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public JsonElement toJson() {

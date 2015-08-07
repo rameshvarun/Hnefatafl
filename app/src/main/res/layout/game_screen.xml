@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:id="@+id/frameLayout">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="bottom|center_horizontal"
+        android:id="@+id/move_confirm_view"
+        android:orientation="horizontal"
+        >
+
+        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="60dp" android:layout_height="60dp"
+            android:src="@drawable/cancel_button"
+            android:id="@+id/cancel_button">
+        </ImageView>
+
+        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="60dp" android:layout_height="60dp"
+            android:src="@drawable/ok_button"
+            android:id="@+id/ok_button">
+        </ImageView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Attacker&apos;s Turn"
+            android:id="@+id/currentPlayer"
+            android:textColor="@android:color/black"
+            android:textSize="35dp" />
+    </LinearLayout>
+
+</FrameLayout>

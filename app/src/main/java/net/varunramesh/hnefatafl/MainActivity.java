@@ -23,7 +23,6 @@ import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameActivity;
 
 import net.varunramesh.hnefatafl.game.PlayerActivity;
-import net.varunramesh.hnefatafl.nativeplayer.NativePlayer;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.Player;
 

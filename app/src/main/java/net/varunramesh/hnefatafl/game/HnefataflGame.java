@@ -1,5 +1,7 @@
 package net.varunramesh.hnefatafl.game;
 
+import android.os.Handler;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
@@ -15,12 +17,15 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
+import net.varunramesh.hnefatafl.simulator.EventHandler;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.Piece;
+import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
 
 import java.util.ArrayList;
@@ -35,29 +40,41 @@ import java.util.Map;
 /**
  * Created by Varun on 7/23/2015.
  */
-public class HnefataflGame extends ApplicationAdapter {
+public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private final GameState state;
+    private final Handler uiHandler;
 
     private BoardActor boardActor;
     private Stage stage;
     private Camera cam;
+    private Texture done;
 
-    private FreeTypeFontGenerator fontGenerator;
-
-    /** What stage in executing a move are we currently in? */
-    public static enum MoveStage {
-
-    }
-
-    public HnefataflGame(GameState state) {
+    public HnefataflGame(GameState state, Handler uiHandler) {
         this.state = state;
+        this.uiHandler = uiHandler;
+        moveState = MoveState.SELECT_MOVE;
     }
+
+    @Override
+    public void MovePiece(Position from, Position to) {}
+
+    @Override
+    public void RemovePiece(Position position) {}
+
+    @Override
+    public void SetWinner(Player player) {}
+
+    public static enum MoveState {
+        SELECT_MOVE,
+        CONFIRM_MOVE
+    }
+    private MoveState moveState;
+    public MoveState getMoveState() { return moveState; }
 
     @Override
     public void create () {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
-
         cam = stage.getCamera();
 
         // Create game board.
@@ -73,8 +90,6 @@ public class HnefataflGame extends ApplicationAdapter {
         }
 
         cam.position.set(boardActor.getWidth() / 2, boardActor.getHeight() / 2, cam.position.z);
-
-        fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("Norse.otf"));
     }
 
     public Vector2 toWorldPosition(Position position) {
@@ -84,7 +99,10 @@ public class HnefataflGame extends ApplicationAdapter {
 
 
     public void stageAction(Action action) {
+        assert getMoveState() == MoveState.SELECT_MOVE;
         clearMoveSelectors();
+        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+        moveState = MoveState.CONFIRM_MOVE;
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
@@ -103,29 +121,30 @@ public class HnefataflGame extends ApplicationAdapter {
         return selection == piece;
     }
 
-
     public void selectPiece(PieceActor piece) {
-        // Clear move selectors.
-        clearMoveSelectors();
+        // You can only select a piece during the select move state.
+        if(getMoveState() == MoveState.SELECT_MOVE) {
+            // Clear move selectors.
+            clearMoveSelectors();
 
-        // Set selection
-        selection = piece;
+            // Set selection
+            selection = piece;
 
-        // Create selection marker.
-        SelectionMarker selection = new SelectionMarker(this, piece.getPosition());
-        moveSelectors.add(selection);
-        stage.addActor(selection);
+            // Create selection marker.
+            SelectionMarker selection = new SelectionMarker(this, piece.getPosition());
+            moveSelectors.add(selection);
+            stage.addActor(selection);
 
-        // Create move markers.
-        for(Action action : state.currentBoard().getActions(piece.getPosition())) {
-            MoveMarker move = new MoveMarker(this, piece, action);
-            moveSelectors.add(move);
-            stage.addActor(move);
+            // Create move markers.
+            for (Action action : state.currentBoard().getActions(piece.getPosition())) {
+                MoveMarker move = new MoveMarker(this, piece, action);
+                moveSelectors.add(move);
+                stage.addActor(move);
+            }
         }
     }
 
     private void setBoardConfiguration(Board board) {
-
         for(Map.Entry<Position, Piece> piece : board.getPieces()) {
             PieceActor actor = new PieceActor(this, piece.getValue().getType(), piece.getKey());
             stage.addActor(actor);
@@ -168,7 +187,6 @@ public class HnefataflGame extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-        fontGenerator.dispose();
         stage.dispose();
     }
 

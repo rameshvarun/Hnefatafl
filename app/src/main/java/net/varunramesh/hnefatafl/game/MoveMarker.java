@@ -46,7 +46,6 @@ public class MoveMarker extends Actor implements LayerActor {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 game.stageAction(action);
-                piece.slideTo(position);
                 return true;
             }
 

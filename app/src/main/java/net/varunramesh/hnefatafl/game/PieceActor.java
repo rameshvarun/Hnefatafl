@@ -63,6 +63,8 @@ public class PieceActor extends Actor implements LayerActor {
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (game.getMoveState() != HnefataflGame.MoveState.SELECT_MOVE) return false;
+
                 Log.d(TAG, boardPosition.toString() + " touched...");
 
                 if(!game.isSelected(piece)) {

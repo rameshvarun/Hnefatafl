@@ -32,6 +32,11 @@ public class Action implements Saveable {
         this.to = new Position(array.get(2));
     }
 
+    // Getters
+    public Player getPlayer() { return player; }
+    public Position getFrom() { return from; }
+    public Position getTo() { return to; }
+
     @Override
     public JsonElement toJson() {
         JsonArray action = new JsonArray();
@@ -58,9 +63,5 @@ public class Action implements Saveable {
         result = 31 * result + from.hashCode();
         result = 31 * result + to.hashCode();
         return result;
-    }
-
-    public Position getTo() {
-        return to;
     }
 }
