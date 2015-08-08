@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl.game;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -41,6 +42,8 @@ import java.util.Map;
  * Created by Varun on 7/23/2015.
  */
 public class HnefataflGame extends ApplicationAdapter implements EventHandler {
+    private final String TAG = "HnefataflGame";
+
     private final GameState state;
     private final Handler uiHandler;
 
@@ -56,7 +59,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     @Override
-    public void MovePiece(Position from, Position to) {}
+    public void MovePiece(Position from, Position to) {
+        Log.d(TAG, "Move piece from " + from.toString() + " to " + to.toString() + ".");
+        PieceActor actor = getPieceActorAt(from);
+        assert actor != null;
+        actor.slideTo(to);
+    }
 
     @Override
     public void RemovePiece(Position position) {}
@@ -99,10 +107,19 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
 
     public void stageAction(Action action) {
+        // We can only stage an action from the SELECT_MOVE state.
         assert getMoveState() == MoveState.SELECT_MOVE;
+
+
+        // Destroy all move selecters.
         clearMoveSelectors();
-        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+
+        // Step forward the state, enacting events.
+        state.currentBoard().step(action, this);
+
+        // Transition into the CONFIRM_MOVE state
         moveState = MoveState.CONFIRM_MOVE;
+        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
@@ -117,6 +134,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         moveSelectors.clear();
     }
 
+    /** Return true if the given PieceActor is the currently selected one - false if otherwise */
     public boolean isSelected(PieceActor piece) {
         return selection == piece;
     }
@@ -144,7 +162,21 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         }
     }
 
+    /** Returns the PieceActor at the given position, or null if there is none. */
+    private PieceActor getPieceActorAt(Position boardPosition) {
+        for(Actor actor : stage.getActors()) {
+            if(actor instanceof PieceActor) {
+                PieceActor pieceActor = (PieceActor)actor;
+                if(pieceActor.getPosition().equals(boardPosition))
+                    return pieceActor;
+            }
+        }
+        return null;
+    }
+
+    /** Clear the visual board and add pieces to match the given configuration */
     private void setBoardConfiguration(Board board) {
+        // TODO: Clear actors
         for(Map.Entry<Position, Piece> piece : board.getPieces()) {
             PieceActor actor = new PieceActor(this, piece.getValue().getType(), piece.getKey());
             stage.addActor(actor);

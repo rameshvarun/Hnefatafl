@@ -103,6 +103,7 @@ public class PieceActor extends Actor implements LayerActor {
     }
 
     public void slideTo(Position newPosition) {
+        boardPosition = newPosition;
         Vector2 worldPosition = game.toWorldPosition(newPosition);
         worldPosition.sub(getWidth() / 2.0f, 87.0f);
 

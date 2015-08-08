@@ -66,9 +66,21 @@ public final class Board implements Saveable {
         return pieces.size();
     }
 
-    public Board takeAction(Action action, EventHandler eventHandler) {
+    public Board step(Action action, EventHandler eventHandler) {
         assert action.getPlayer() == currentPlayer;
-        throw new UnsupportedOperationException();
+
+        // TODO: Probably verify move and complain if it's illegal.
+        // for now, assume that the move was given by us.
+
+        // Move the piece.
+        Piece piece = pieces.get(action.getFrom());
+        PMap<Position, Piece> newPieces = pieces.minus(action.getFrom());
+        newPieces = pieces.plus(action.getTo(), piece);
+        eventHandler.MovePiece(action.getFrom(), action.getTo());
+
+        // TODO: Handle captures
+
+        return new Board(newPieces, Utils.otherPlayer(currentPlayer));
     }
 
     @Override
