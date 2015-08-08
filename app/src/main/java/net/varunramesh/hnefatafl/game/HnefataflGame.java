@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -37,6 +38,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by Varun on 7/23/2015.
@@ -52,10 +55,26 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private Camera cam;
     private Texture done;
 
+    private AssetManager manager;
+
+    private final Queue<Integer> messageQueue;
+    public void postMessage(int message) {
+        messageQueue.add(new Integer(message));
+    }
+
+    private final HashMap<String, Texture> textures = new HashMap<>();
+    public Texture getTexture(String file) {
+        if(!textures.containsKey(file)) {
+            textures.put(file, new Texture(file));
+        }
+        return textures.get(file);
+    }
+
     public HnefataflGame(GameState state, Handler uiHandler) {
         this.state = state;
         this.uiHandler = uiHandler;
         moveState = MoveState.SELECT_MOVE;
+        messageQueue = new ConcurrentLinkedQueue<Integer>();
     }
 
     @Override
@@ -84,9 +103,10 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         cam = stage.getCamera();
+        manager = new AssetManager();
 
         // Create game board.
-        boardActor = new BoardActor();
+        boardActor = new BoardActor(this);
         stage.addActor(boardActor);
 
         // If this is the first move, then simply display the board.
@@ -110,7 +130,6 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         // We can only stage an action from the SELECT_MOVE state.
         assert getMoveState() == MoveState.SELECT_MOVE;
 
-
         // Destroy all move selecters.
         clearMoveSelectors();
 
@@ -120,6 +139,19 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         // Transition into the CONFIRM_MOVE state
         moveState = MoveState.CONFIRM_MOVE;
         uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+    }
+
+    /** Call when in CONFIRM_MOVE state to revert the move */
+    private void cancelMove() {
+        // In order to cancel a move, we must already have staged a move.
+        assert moveState == MoveState.CONFIRM_MOVE;
+
+        // Set board back to original state
+        setBoardConfiguration(state.currentBoard());
+
+        // Transition back to the SELECT_MOVE state
+        moveState = MoveState.SELECT_MOVE;
+        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
@@ -162,26 +194,32 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         }
     }
 
+    private final List<PieceActor> pieceActors = new ArrayList<>();
+
     /** Returns the PieceActor at the given position, or null if there is none. */
     private PieceActor getPieceActorAt(Position boardPosition) {
-        for(Actor actor : stage.getActors()) {
-            if(actor instanceof PieceActor) {
-                PieceActor pieceActor = (PieceActor)actor;
-                if(pieceActor.getPosition().equals(boardPosition))
-                    return pieceActor;
-            }
+        for(PieceActor pieceActor : pieceActors) {
+            if(pieceActor.getPosition().equals(boardPosition)) return pieceActor;
         }
         return null;
     }
 
     /** Clear the visual board and add pieces to match the given configuration */
     private void setBoardConfiguration(Board board) {
-        // TODO: Clear actors
+        // Clear the current actors
+        clearMoveSelectors();
+        for(PieceActor pieceActor : pieceActors) pieceActor.remove();
+        pieceActors.clear();
+
+        // Add in the new actors.
         for(Map.Entry<Position, Piece> piece : board.getPieces()) {
             PieceActor actor = new PieceActor(this, piece.getValue().getType(), piece.getKey());
             stage.addActor(actor);
+            pieceActors.add(actor);
         }
     }
+
+    public static final int MESSAGE_CANCEL_MOVE = 1;
 
     @Override
     public void render () {
@@ -209,6 +247,15 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         });
 
         stage.draw();
+
+        while(messageQueue.size() > 0) {
+            int message = messageQueue.remove().intValue();
+            switch (message) {
+                case MESSAGE_CANCEL_MOVE:
+                    cancelMove();
+                    break;
+            }
+        }
     }
 
     @Override

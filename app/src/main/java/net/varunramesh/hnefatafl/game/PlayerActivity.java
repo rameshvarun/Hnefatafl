@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl.game;
 
 import android.graphics.Typeface;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -89,17 +90,24 @@ public class PlayerActivity extends AndroidApplication {
         GameState gameState = new GameState(element);
 
         // Create the game view.
-        View gameView = initializeForView(new HnefataflGame(gameState, handler), config);
+        final HnefataflGame game = new HnefataflGame(gameState, handler);
+        View gameView = initializeForView(game, config);
 
         // Add the game view to the framelayout
         setContentView(R.layout.game_screen);
         FrameLayout frameLayout = (FrameLayout)findViewById(R.id.frameLayout);
         frameLayout.addView(gameView, 0);
 
-        //
+        // Install Norse font
         TextView currentPlayer = (TextView) findViewById(R.id.currentPlayer);
         Typeface tf = Typeface.createFromAsset(getAssets(), "Norse-Bold.otf");
         currentPlayer.setTypeface(tf);
+
+        // Setup Cancel / Confirm Handlers
+        ImageView cancel_button = (ImageView)findViewById(R.id.cancel_button);
+        cancel_button.setOnClickListener((View v) -> {
+            game.postMessage(HnefataflGame.MESSAGE_CANCEL_MOVE);
+        });
 
         hideMoveConfirmation();
     }

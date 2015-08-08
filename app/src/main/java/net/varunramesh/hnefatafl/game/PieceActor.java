@@ -34,13 +34,13 @@ public class PieceActor extends Actor implements LayerActor {
 
         switch(type) {
             case KING:
-                texture = new Texture("king.png");
+                texture = game.getTexture("king.png");
                 break;
             case DEFENDER:
-                texture = new Texture("defender.png");
+                texture = game.getTexture("defender.png");
                 break;
             case ATTACKER:
-                texture = new Texture("attacker.png");
+                texture = game.getTexture("attacker.png");
                 break;
             default:
                 throw new UnsupportedOperationException();
