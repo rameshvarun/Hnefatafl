@@ -75,6 +75,12 @@ public class GameState implements Saveable {
 
     /** Returns true if no moves have been made yet */
     public boolean isFirstMove() { return actions.size() == 0; }
+
     /** The current configuration of the board */
-    public Board currentBoard() { return boards.peekLast(); }
+    public Board currentBoard() { return boards.peek(); }
+
+    public void pushBoard(Action action, Board board) {
+        actions.push(action);
+        boards.push(board);
+    }
 }

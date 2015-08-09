@@ -56,6 +56,7 @@ public class PlayerActivity extends AndroidApplication {
 
     public static final int MESSAGE_SHOW_CONFIRMATION = 1;
     public static final int MESSAGE_HIDE_CONFIRMATION = 2;
+    public static final int MESSAGE_UPDATE_CURRENT_PLAYER = 3;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -72,6 +73,8 @@ public class PlayerActivity extends AndroidApplication {
                     case MESSAGE_HIDE_CONFIRMATION:
                         hideMoveConfirmation();
                         break;
+                    case MESSAGE_UPDATE_CURRENT_PLAYER:
+                        throw new UnsupportedOperationException();
                 }
             }
         };
@@ -104,9 +107,13 @@ public class PlayerActivity extends AndroidApplication {
         currentPlayer.setTypeface(tf);
 
         // Setup Cancel / Confirm Handlers
-        ImageView cancel_button = (ImageView)findViewById(R.id.cancel_button);
+        final ImageView cancel_button = (ImageView)findViewById(R.id.cancel_button);
         cancel_button.setOnClickListener((View v) -> {
             game.postMessage(HnefataflGame.MESSAGE_CANCEL_MOVE);
+        });
+        final ImageView ok_button = (ImageView)findViewById(R.id.ok_button);
+        ok_button.setOnClickListener((View v) -> {
+            game.postMessage(HnefataflGame.MESSAGE_CONFIRM_MOVE);
         });
 
         hideMoveConfirmation();

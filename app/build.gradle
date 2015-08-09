@@ -80,6 +80,10 @@ dependencies {
     // Google Play Services
     compile "com.google.android.gms:play-services:6.5+"
 
+    // Stream APIs Backported From Java 8
+    compile 'com.annimon:stream:1.0.2'
+
+    // GSON Json library
     compile "com.google.code.gson:gson:2.3.1"
 }
 

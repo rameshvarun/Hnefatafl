@@ -86,7 +86,13 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     @Override
-    public void RemovePiece(Position position) {}
+    public void RemovePiece(Position position) {
+        Log.d(TAG, "Removed piece from " + position.toString() + ".");
+        PieceActor actor = getPieceActorAt(position);
+        assert actor != null;
+        pieceActors.remove(actor);
+        actor.capture();
+    }
 
     @Override
     public void SetWinner(Player player) {}
@@ -125,6 +131,9 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         return boardActor.toWorldPosition(position);
     }
 
+    /** The staged board for a move that hasn't been confirmed yet. */
+    private Board stagedBoard;
+    private Action stagedAction;
 
     public void stageAction(Action action) {
         // We can only stage an action from the SELECT_MOVE state.
@@ -134,7 +143,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         clearMoveSelectors();
 
         // Step forward the state, enacting events.
-        state.currentBoard().step(action, this);
+        stagedAction = action;
+        stagedBoard = state.currentBoard().step(stagedAction, this);
 
         // Transition into the CONFIRM_MOVE state
         moveState = MoveState.CONFIRM_MOVE;
@@ -146,16 +156,29 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         // In order to cancel a move, we must already have staged a move.
         assert moveState == MoveState.CONFIRM_MOVE;
 
-        // Set board back to original state
+        // Set board back to original state.
         setBoardConfiguration(state.currentBoard());
 
-        // Transition back to the SELECT_MOVE state
+        // Transition back to the SELECT_MOVE state.
+        moveState = MoveState.SELECT_MOVE;
+        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
+    }
+
+    private void confirmMove() {
+        // In order to confirm a move, we must already have staged a move.
+        assert moveState == MoveState.CONFIRM_MOVE;
+
+        state.pushBoard(stagedAction, stagedBoard);
+
+        // Transition back to the SELECT_MOVE state.
         moveState = MoveState.SELECT_MOVE;
         uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
     private PieceActor selection;
+
+    public List<Actor> getMoveSelectors() { return moveSelectors; }
 
     public void clearMoveSelectors() {
         selection = null;
@@ -220,6 +243,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     public static final int MESSAGE_CANCEL_MOVE = 1;
+    public static final int MESSAGE_CONFIRM_MOVE = 2;
 
     @Override
     public void render () {
@@ -253,6 +277,9 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             switch (message) {
                 case MESSAGE_CANCEL_MOVE:
                     cancelMove();
+                    break;
+                case MESSAGE_CONFIRM_MOVE:
+                    confirmMove();
                     break;
             }
         }

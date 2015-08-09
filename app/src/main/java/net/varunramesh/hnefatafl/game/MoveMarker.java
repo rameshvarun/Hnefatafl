@@ -59,6 +59,8 @@ public class MoveMarker extends Actor implements LayerActor {
         });
     }
 
+    public Action getAction() { return action; }
+
     @Override
     public int getLayer() {
         return 1;

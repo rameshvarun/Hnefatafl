@@ -66,6 +66,7 @@ public final class Board implements Saveable {
         return pieces.size();
     }
 
+    /** Step the game forward by one action. Rules are implemented based off of http://aagenielsen.dk/fetlar_rules_en.php */
     public Board step(Action action, EventHandler eventHandler) {
         assert action.getPlayer() == currentPlayer;
 
@@ -75,12 +76,41 @@ public final class Board implements Saveable {
         // Move the piece.
         Piece piece = pieces.get(action.getFrom());
         PMap<Position, Piece> newPieces = pieces.minus(action.getFrom());
-        newPieces = pieces.plus(action.getTo(), piece);
+        newPieces = newPieces.plus(action.getTo(), piece);
         eventHandler.MovePiece(action.getFrom(), action.getTo());
 
-        // TODO: Handle captures
+        // Look to see if any adjacent opposing piece has been sandwiched.
+        for(Direction dir : Direction.values()) {
+            final Position pos = action.getTo().getNeighbor(dir);
+            if(newPieces.containsKey(pos)) {
+                Piece adjacentPiece = newPieces.get(pos);
+                if(adjacentPiece.hostileTo(piece) && Board.isSandwiched(pieces, pos)) {
+                    newPieces = newPieces.minus(pos);
+                    eventHandler.RemovePiece(pos);
+                }
+            }
+        }
 
         return new Board(newPieces, Utils.otherPlayer(currentPlayer));
+    }
+
+    public static boolean isSandwiched(PMap<Position, Piece> pieces, Position pos) {
+        final Piece piece = pieces.get(pos);
+        switch (piece.getType()) {
+            case KING:
+                boolean captured = true;
+                for(Direction dir : Direction.values()) {
+                    Position adjacent = pos.getNeighbor(dir);
+                    boolean enemy = pieces.containsKey(adjacent) && pieces.get(adjacent).getType() == Piece.Type.ATTACKER;
+                    if(!enemy) {
+                        captured = false;
+                        break;
+                    }
+                }
+                return captured;
+            // TOOD: Attacker and Defender
+        }
+        return true;
     }
 
     @Override
