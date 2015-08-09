@@ -1,7 +1,9 @@
 package net.varunramesh.hnefatafl.simulator;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import com.annimon.stream.Stream;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -71,7 +73,7 @@ public final class Board implements Saveable {
         assert action.getPlayer() == currentPlayer;
 
         // TODO: Probably verify move and complain if it's illegal.
-        // for now, assume that the move was given by us.
+        // for now, assume that the move was given by us, and is thus valid.
 
         // Move the piece.
         Piece piece = pieces.get(action.getFrom());
@@ -84,7 +86,7 @@ public final class Board implements Saveable {
             final Position pos = action.getTo().getNeighbor(dir);
             if(newPieces.containsKey(pos)) {
                 Piece adjacentPiece = newPieces.get(pos);
-                if(adjacentPiece.hostileTo(piece) && Board.isSandwiched(pieces, pos)) {
+                if(adjacentPiece.hostileTo(piece) && Board.isSandwiched(newPieces, pos)) {
                     newPieces = newPieces.minus(pos);
                     eventHandler.RemovePiece(pos);
                 }
@@ -98,17 +100,38 @@ public final class Board implements Saveable {
         final Piece piece = pieces.get(pos);
         switch (piece.getType()) {
             case KING:
-                boolean captured = true;
-                for(Direction dir : Direction.values()) {
+                return Stream.of(Direction.values()).allMatch((Direction dir) -> {
                     Position adjacent = pos.getNeighbor(dir);
-                    boolean enemy = pieces.containsKey(adjacent) && pieces.get(adjacent).getType() == Piece.Type.ATTACKER;
-                    if(!enemy) {
-                        captured = false;
-                        break;
-                    }
-                }
-                return captured;
-            // TOOD: Attacker and Defender
+                    return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
+                });
+            case ATTACKER:
+                return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
+                    Position firstPos = pos.getNeighbor(dir);
+                    Position secondPos = pos.getNeighbor(Utils.oppositeDirection(dir));
+
+                    // Attackers can be trapped between the throne, a refugee square, and an hostile piece.
+                    boolean firstPosHostile = CENTER_SQUARE.equals(firstPos)
+                            || getRefugeeSquares().contains(firstPos)
+                            || (pieces.containsKey(firstPos) && pieces.get(firstPos).hostileTo(piece));
+                    boolean secondPosHostile = CENTER_SQUARE.equals(secondPos)
+                            || getRefugeeSquares().contains(secondPos)
+                            || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
+
+                    return firstPosHostile && secondPosHostile;
+                });
+            case DEFENDER:
+                return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
+                    Position firstPos = pos.getNeighbor(dir);
+                    Position secondPos = pos.getNeighbor(Utils.oppositeDirection(dir));
+
+                    // Attackers can be trapped between a refugee square, and a defender.
+                    boolean firstPosHostile = getRefugeeSquares().contains(firstPos)
+                            || (pieces.containsKey(firstPos) && pieces.get(firstPos).hostileTo(piece));
+                    boolean secondPosHostile = getRefugeeSquares().contains(secondPos)
+                            || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
+
+                    return firstPosHostile && secondPosHostile;
+                });
         }
         return true;
     }
@@ -188,6 +211,7 @@ public final class Board implements Saveable {
     }
 
     /* Static Methods and Variables */
+    private static final String TAG = "Board";
     public static final int BOARD_SIZE = 11;
     public static PMap<Position, Piece> START_CONFIGURATION = createStartConfiguration();
 

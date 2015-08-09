@@ -200,7 +200,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             // Clear move selectors.
             clearMoveSelectors();
 
-            // Set selection
+            // Set selection.
             selection = piece;
 
             // Create selection marker.
@@ -261,13 +261,10 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         stage.act(Gdx.graphics.getDeltaTime());
 
         /* Sort actors according to layer */
-        stage.getRoot().getChildren().sort(new Comparator<Actor>() {
-            @Override
-            public int compare(Actor lhs, Actor rhs) {
-                int llayer = lhs instanceof LayerActor ? ((LayerActor) lhs).getLayer() : 0;
-                int rlayer = rhs instanceof LayerActor ? ((LayerActor) rhs).getLayer() : 0;
-                return Integer.valueOf(llayer).compareTo(Integer.valueOf(rlayer));
-            }
+        stage.getRoot().getChildren().sort((Actor lhs, Actor rhs) -> {
+            int llayer = lhs instanceof LayerActor ? ((LayerActor) lhs).getLayer() : 0;
+            int rlayer = rhs instanceof LayerActor ? ((LayerActor) rhs).getLayer() : 0;
+            return Integer.valueOf(llayer).compareTo(Integer.valueOf(rlayer));
         });
 
         stage.draw();
