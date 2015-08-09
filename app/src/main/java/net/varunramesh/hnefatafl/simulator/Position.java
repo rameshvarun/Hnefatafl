@@ -9,22 +9,13 @@ import java.io.Serializable;
 /**
  * Created by varunramesh on 7/22/15.
  */
-public final class Position implements Saveable {
+public final class Position implements Serializable {
     private final int x;
     private final int y;
 
     public Position(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-    public Position(JsonElement json) {
-        assert json.isJsonArray();
-        JsonArray array = json.getAsJsonArray();
-        assert array.size() == 2;
-
-        this.x = array.get(0).getAsInt();
-        this.y = array.get(1).getAsInt();
     }
 
     public int getX() { return x; }
@@ -58,14 +49,6 @@ public final class Position implements Saveable {
     @Override
     public int hashCode() {
         return 31 * x + y;
-    }
-
-    @Override
-    public JsonElement toJson() {
-        JsonArray array = new JsonArray();
-        array.add(new JsonPrimitive(x));
-        array.add(new JsonPrimitive(y));
-        return array;
     }
 
     @Override

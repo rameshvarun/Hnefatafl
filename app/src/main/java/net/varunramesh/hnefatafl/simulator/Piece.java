@@ -11,7 +11,7 @@ import static net.varunramesh.hnefatafl.simulator.Piece.Type.*;
 /**
  * Created by varunramesh on 7/22/15.
  */
-public final class Piece implements Saveable {
+public final class Piece implements Serializable {
     public boolean hostileTo(Piece other) {
         if(type == ATTACKER)
             return other.getType() == DEFENDER || other.getType() == KING;
@@ -29,16 +29,6 @@ public final class Piece implements Saveable {
 
     Piece(Type type) {
         this.type = type;
-    }
-
-    Piece(JsonElement json) {
-        assert json.isJsonPrimitive();
-        this.type = Type.valueOf(json.getAsString());
-    }
-
-    @Override
-    public JsonElement toJson() {
-        return new JsonPrimitive(type.toString());
     }
 
     public Type getType() { return type; }

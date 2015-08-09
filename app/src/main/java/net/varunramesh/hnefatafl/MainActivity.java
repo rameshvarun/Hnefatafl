@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.alertdialogpro.AlertDialogPro;
+import com.annimon.stream.function.Consumer;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
 import com.github.florent37.materialviewpager.MaterialViewPager;
@@ -24,6 +25,7 @@ import com.google.example.games.basegameutils.BaseGameActivity;
 
 import net.varunramesh.hnefatafl.game.PlayerActivity;
 import net.varunramesh.hnefatafl.simulator.GameState;
+import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
 
 public class MainActivity extends BaseGameActivity {
@@ -106,9 +108,9 @@ public class MainActivity extends BaseGameActivity {
             .listener((DialogInterface dialog, int item) -> {
                 switch (item) {
                     case R.id.action_pass_and_play: {
-                        GameState gameState = new GameState(GameState.GameType.PASS_AND_PLAY);
+                        GameState gameState = new GameState(new GameType.PassAndPlay());
                         Intent intent = new Intent(this, PlayerActivity.class);
-                        intent.putExtra("GameState", gameState.toJson().toString());
+                        intent.putExtra("GameState", gameState);
                         startActivity(intent);
                         break;
                     }
@@ -122,11 +124,10 @@ public class MainActivity extends BaseGameActivity {
                         break;
                     }
                     case R.id.action_player_vs_ai: {
-                        showSidePickDialog((DialogInterface sideDialog, int which) -> {
-                            Player player = (which == 0) ? Player.ATTACKER : Player.DEFENDER;
-                            GameState gameState = new GameState(GameState.GameType.PLAYER_VS_AI);
+                        showSidePickDialog((Player player) -> {
+                            GameState gameState = new GameState(new GameType.PlayerVsAI(player));
                             Intent intent = new Intent(this, PlayerActivity.class);
-                            intent.putExtra("GameState", gameState.toJson().toString());
+                            intent.putExtra("GameState", gameState);
                             startActivity(intent);
                         });
                         break;
@@ -140,16 +141,22 @@ public class MainActivity extends BaseGameActivity {
         });
     }
 
-    private void showSidePickDialog(DialogInterface.OnClickListener startListener) {
+    private void showSidePickDialog(Consumer<Player> callback) {
+        final Mutable.Integer choice = new Mutable.Integer();
+
         AlertDialogPro.Builder builder = new AlertDialogPro.Builder(this);
         builder.setTitle("Pick A Side...")
                 .setSingleChoiceItems(
-                        new String[]{"Attacker", "Defender"},
-                        0, null
+                        new String[]{"Attacker", "Defender"}, -1, (DialogInterface sideDialog, int which) -> {
+                            choice.value = which;
+                        }
                 )
+                .setCancelable(true)
                 .setNegativeButton("Cancel", null)
-                .setPositiveButton("Start", startListener)
-                .show();
+                .setPositiveButton("Start", (DialogInterface sideDialog, int which) -> {
+                    Player player = (choice.value == 0) ? Player.ATTACKER : Player.DEFENDER;
+                    callback.accept(player);
+                }).show();
     }
 
     @Override

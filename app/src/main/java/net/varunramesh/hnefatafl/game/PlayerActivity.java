@@ -89,8 +89,7 @@ public class PlayerActivity extends AndroidApplication {
         // Load GameState from bundle extras.
         Bundle extras = getIntent().getExtras();
         assert extras.containsKey("GameState");
-        JsonElement element = (new Gson()).fromJson(extras.getString("GameState"), JsonElement.class);
-        GameState gameState = new GameState(element);
+        GameState gameState = (GameState)(extras.getSerializable("GameState"));
 
         // Create the game view.
         final HnefataflGame game = new HnefataflGame(gameState, handler);

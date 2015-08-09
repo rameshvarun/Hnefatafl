@@ -16,6 +16,9 @@ import org.pcollections.MapPSet;
 import org.pcollections.PMap;
 import org.pcollections.PSet;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,10 +29,10 @@ import java.util.Set;
 /**
  * An immutable object that represents the state of
  */
-public final class Board implements Saveable {
-    /* Instance Variables */
-    private final PMap<Position, Piece> pieces;
-    private final Player currentPlayer;
+public final class Board implements Serializable {
+    /* Instance Variables. Would Be final if not for the need for custom serialization. */
+    private PMap<Position, Piece> pieces;
+    private Player currentPlayer;
 
     /** Default contructor that creates a game board in the starting configuration. */
     public Board() {
@@ -37,24 +40,26 @@ public final class Board implements Saveable {
         currentPlayer = Player.ATTACKER; // Attacker goes first.
     }
 
-    /** Load a Board Object from JSON */
-    public Board(JsonElement element) {
-        assert element.isJsonObject();
-        JsonArray pieces = element.getAsJsonObject()
-                .get("pieces").getAsJsonArray();
-
-        // Load pieces.
-        Map<Position, Piece> mutPieces = new HashMap<>();
-        for(JsonElement piece : pieces) {
-            mutPieces.put(
-                    new Position(piece.getAsJsonArray().get(0)),
-                    new Piece(piece.getAsJsonArray().get(1))
-            );
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.writeObject(currentPlayer);
+        out.writeInt(pieces.size());
+        for(Map.Entry<Position, Piece> entry : pieces.entrySet()) {
+            out.writeObject(entry.getKey());
+            out.writeObject(entry.getValue());
         }
-        this.pieces = HashTreePMap.from(mutPieces);
+    }
 
-        this.currentPlayer = Player.valueOf(
-                element.getAsJsonObject().get("currentPlayer").getAsString());
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        this.currentPlayer = (Player)stream.readObject();
+
+        Map<Position, Piece> pieces = new HashMap<Position, Piece>();
+        int size = stream.readInt();
+        for(int i = 0; i < size; ++i) {
+            Position key = (Position)stream.readObject();
+            Piece value = (Piece)stream.readObject();
+            pieces.put(key, value);
+        }
+        this.pieces = HashTreePMap.from(pieces);
     }
 
     /** Instantiate a board with the given values */
@@ -136,26 +141,6 @@ public final class Board implements Saveable {
         return true;
     }
 
-    @Override
-    public JsonElement toJson() {
-        JsonObject board = new JsonObject();
-
-        // Serialize Piece locations.
-        JsonArray pieces = new JsonArray();
-        for(Map.Entry<Position, Piece> piece : this.pieces.entrySet()) {
-            JsonArray entry = new JsonArray();
-            entry.add(piece.getKey().toJson());
-            entry.add(piece.getValue().toJson());
-            pieces.add(entry);
-        }
-        board.add("pieces", pieces);
-
-        // Save currentPlayer.
-        board.add("currentPlayer", new JsonPrimitive(currentPlayer.toString()));
-
-        return board;
-    }
-
     /** Check if a position is inside the board */
     public boolean contains(Position position) {
         return position.getX() >= 0 && position.getY() >= 0 &&
@@ -205,6 +190,8 @@ public final class Board implements Saveable {
     public Set<Action> getActions() {
         return getActions(currentPlayer);
     }
+
+    public Player getCurrentPlayer() { return currentPlayer; }
 
     public Set<Map.Entry<Position, Piece>> getPieces() {
         return pieces.entrySet();

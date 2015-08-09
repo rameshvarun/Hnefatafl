@@ -19,13 +19,17 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import net.varunramesh.hnefatafl.ai.AIStrategy;
+import net.varunramesh.hnefatafl.ai.RandomStrategy;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
 import net.varunramesh.hnefatafl.simulator.GameState;
+import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -73,8 +77,26 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     public HnefataflGame(GameState state, Handler uiHandler) {
         this.state = state;
         this.uiHandler = uiHandler;
-        moveState = MoveState.SELECT_MOVE;
         messageQueue = new ConcurrentLinkedQueue<Integer>();
+    }
+
+    public void TakeAIMove() {
+        assert moveState == MoveState.AI_MOVE;
+
+        Utils.schedule(() -> {
+            // Decide the next move
+            AIStrategy strategy = new RandomStrategy();
+            Action action = strategy.decide(state.currentBoard(), state.currentBoard().getActions());
+
+            // Step forward the state, enacting events.
+            Board newBoard = state.currentBoard().step(action, this);
+            state.pushBoard(action, newBoard);
+
+            // Let the player move again, in the SELECT_MOVE state
+            moveState = MoveState.SELECT_MOVE;
+        }, 1.0f);
+
+
     }
 
     @Override
@@ -99,7 +121,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     public static enum MoveState {
         SELECT_MOVE,
-        CONFIRM_MOVE
+        CONFIRM_MOVE,
+        AI_MOVE
     }
     private MoveState moveState;
     public MoveState getMoveState() { return moveState; }
@@ -124,6 +147,21 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         }
 
         cam.position.set(boardActor.getWidth() / 2, boardActor.getHeight() / 2, cam.position.z);
+
+        if (state.getType() instanceof GameType.PassAndPlay) {
+            moveState = MoveState.SELECT_MOVE;
+        } else if (state.getType() instanceof GameType.PlayerVsAI) {
+            GameType.PlayerVsAI pvaState = (GameType.PlayerVsAI) state.getType();
+
+            Log.d(TAG, state.currentBoard().getCurrentPlayer().toString());
+            Log.d(TAG, pvaState.getHumanPlayer().toString());
+            if(state.currentBoard().getCurrentPlayer().equals(pvaState.getHumanPlayer())) {
+                moveState = MoveState.SELECT_MOVE;
+            } else {
+                moveState = MoveState.AI_MOVE;
+                TakeAIMove();
+            }
+        }
     }
 
     public Vector2 toWorldPosition(Position position) {
@@ -170,8 +208,14 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
         state.pushBoard(stagedAction, stagedBoard);
 
-        // Transition back to the SELECT_MOVE state.
-        moveState = MoveState.SELECT_MOVE;
+        if (state.getType() instanceof GameType.PassAndPlay) {
+            // Transition back to the SELECT_MOVE state.
+            moveState = MoveState.SELECT_MOVE;
+        } else if (state.getType() instanceof GameType.PlayerVsAI) {
+            moveState = MoveState.AI_MOVE;
+            TakeAIMove();
+        }
+
         uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
     }
 
