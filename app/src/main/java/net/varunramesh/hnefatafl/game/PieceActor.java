@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -34,6 +35,11 @@ public class PieceActor extends Actor implements LayerActor {
 
     private Position boardPosition;
     private final HnefataflGame game;
+
+    @Override
+    public Actor hit (float x, float y, boolean touchable) {
+        return x >= 0 && x < getWidth() && y >= 0 && y < getWidth() ? this : null;
+    }
 
     public PieceActor(HnefataflGame game, Piece.Type type, Position boardPos){
         this.game = game;
@@ -70,6 +76,9 @@ public class PieceActor extends Actor implements LayerActor {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (game.getMoveState() != HnefataflGame.MoveState.SELECT_MOVE) return false;
+
+                Vector2 touch = new Vector2();
+                event.toCoordinates(piece.getParent(), touch);
 
                 Log.d(TAG, boardPosition.toString() + " touched...");
 
