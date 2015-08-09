@@ -35,6 +35,18 @@ public final class Position implements Serializable {
         throw new UnsupportedOperationException();
     }
 
+    public Direction directionTo(Position other) {
+        if (x == other.x) {
+            if (other.y > y) return Direction.UP;
+            else return Direction.DOWN;
+        } else if (y == other.y) {
+            if (other.x > x) return Direction.RIGHT;
+            else return Direction.LEFT;
+        } else {
+            throw new UnsupportedOperationException("Diagonal directions not supported.");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

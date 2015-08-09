@@ -48,4 +48,9 @@ public class Action implements Serializable {
         result = 31 * result + to.hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "Action(from=" + from.toString() + ",to=" + to.toString() + ")";
+    }
 }

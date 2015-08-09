@@ -22,8 +22,12 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.google.android.gms.wearable.Asset;
+
+import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.ai.AIStrategy;
+import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
@@ -44,6 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 /**
  * Created by Varun on 7/23/2015.
@@ -81,19 +88,36 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     public void TakeAIMove() {
-        assert moveState == MoveState.AI_MOVE;
+        Assert.assertEquals("We should be in the AI_MOVE state before taking an AI move.", moveState, MoveState.AI_MOVE);
+
+        final Player aiPlayer = ((GameType.PlayerVsAI) state.getType()).getAIPlayer();
+        final AIStrategy strategy = new MinimaxStrategy(aiPlayer);
+
+        final FutureTask<Action> aiTask = new FutureTask<Action>(() -> {
+            // Decide the next move
+            Action action = strategy.decide(state.currentBoard(), state.currentBoard().getActions());
+            Assert.assertNotNull("The AI should not return a null action.", action);
+            Log.d(TAG, "AI wants to move " + action.toString());
+            return action;
+        });
+        new Thread(aiTask).start();
 
         Utils.schedule(() -> {
-            // Decide the next move
-            AIStrategy strategy = new RandomStrategy();
-            Action action = strategy.decide(state.currentBoard(), state.currentBoard().getActions());
+            Action action = null;
+            try {
+                action = aiTask.get();
 
-            // Step forward the state, enacting events.
-            Board newBoard = state.currentBoard().step(action, this);
-            state.pushBoard(action, newBoard);
+                // Step forward the state, enacting events.
+                Board newBoard = state.currentBoard().step(action, this);
+                state.pushBoard(action, newBoard);
 
-            // Let the player move again, in the SELECT_MOVE state
-            moveState = MoveState.SELECT_MOVE;
+                // Let the player move again, in the SELECT_MOVE state
+                moveState = MoveState.SELECT_MOVE;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }, 1.0f);
 
 

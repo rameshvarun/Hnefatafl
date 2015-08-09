@@ -76,6 +76,7 @@ public final class Board implements Serializable {
     /** Step the game forward by one action. Rules are implemented based off of http://aagenielsen.dk/fetlar_rules_en.php */
     public Board step(Action action, EventHandler eventHandler) {
         assert action.getPlayer() == currentPlayer;
+        assert action != null;
 
         // TODO: Probably verify move and complain if it's illegal.
         // for now, assume that the move was given by us, and is thus valid.
@@ -84,35 +85,37 @@ public final class Board implements Serializable {
         Piece piece = pieces.get(action.getFrom());
         PMap<Position, Piece> newPieces = pieces.minus(action.getFrom());
         newPieces = newPieces.plus(action.getTo(), piece);
-        eventHandler.MovePiece(action.getFrom(), action.getTo());
+        if(eventHandler != null) eventHandler.MovePiece(action.getFrom(), action.getTo());
 
         // Look to see if any adjacent opposing piece has been sandwiched.
         for(Direction dir : Direction.values()) {
             final Position pos = action.getTo().getNeighbor(dir);
             if(newPieces.containsKey(pos)) {
                 Piece adjacentPiece = newPieces.get(pos);
-                if(adjacentPiece.hostileTo(piece) && Board.isSandwiched(newPieces, pos)) {
+                if(adjacentPiece.hostileTo(piece) && Board.isCaptured(newPieces, pos, action.getTo())) {
                     newPieces = newPieces.minus(pos);
-                    eventHandler.RemovePiece(pos);
+                    if(eventHandler != null) eventHandler.RemovePiece(pos);
                 }
             }
         }
 
         return new Board(newPieces, Utils.otherPlayer(currentPlayer));
     }
+    public Board step(Action action) { return step(action, null); }
 
-    public static boolean isSandwiched(PMap<Position, Piece> pieces, Position pos) {
-        final Piece piece = pieces.get(pos);
+    public static boolean isCaptured(PMap<Position, Piece> pieces, Position defendingPos, Position attackingPos) {
+        final Piece piece = pieces.get(defendingPos);
         switch (piece.getType()) {
             case KING:
                 return Stream.of(Direction.values()).allMatch((Direction dir) -> {
-                    Position adjacent = pos.getNeighbor(dir);
+                    // The King is only sandwiched when all four s
+                    Position adjacent = defendingPos.getNeighbor(dir);
                     return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
                 });
-            case ATTACKER:
-                return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
-                    Position firstPos = pos.getNeighbor(dir);
-                    Position secondPos = pos.getNeighbor(Utils.oppositeDirection(dir));
+            case ATTACKER: {
+                /*return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
+                    Position firstPos = defendingPos.getNeighbor(dir);
+                    Position secondPos = defendingPos.getNeighbor(Utils.oppositeDirection(dir));
 
                     // Attackers can be trapped between the throne, a refugee square, and an hostile piece.
                     boolean firstPosHostile = CENTER_SQUARE.equals(firstPos)
@@ -123,11 +126,16 @@ public final class Board implements Serializable {
                             || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
 
                     return firstPosHostile && secondPosHostile;
-                });
-            case DEFENDER:
-                return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
-                    Position firstPos = pos.getNeighbor(dir);
-                    Position secondPos = pos.getNeighbor(Utils.oppositeDirection(dir));
+                });*/
+                Position oppositePos = defendingPos.getNeighbor(Utils.oppositeDirection(defendingPos.directionTo(attackingPos)));
+                return CENTER_SQUARE.equals(oppositePos)
+                        || getRefugeeSquares().contains(oppositePos)
+                        || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
+            }
+            case DEFENDER: {
+                /*return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
+                    Position firstPos = defendingPos.getNeighbor(dir);
+                    Position secondPos = defendingPos.getNeighbor(Utils.oppositeDirection(dir));
 
                     // Attackers can be trapped between a refugee square, and a defender.
                     boolean firstPosHostile = getRefugeeSquares().contains(firstPos)
@@ -136,7 +144,11 @@ public final class Board implements Serializable {
                             || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
 
                     return firstPosHostile && secondPosHostile;
-                });
+                });*/
+                Position oppositePos = defendingPos.getNeighbor(Utils.oppositeDirection(defendingPos.directionTo(attackingPos)));
+                return getRefugeeSquares().contains(oppositePos)
+                        || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
+            }
         }
         return true;
     }
