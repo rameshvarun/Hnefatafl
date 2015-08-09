@@ -141,7 +141,9 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     @Override
-    public void SetWinner(Player player) {}
+    public void SetWinner(Player player) {
+        Log.d(TAG, player + " won the game.");
+    }
 
     public static enum MoveState {
         SELECT_MOVE,

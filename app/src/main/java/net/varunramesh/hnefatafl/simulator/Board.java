@@ -10,6 +10,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import junit.framework.Assert;
+
 import org.pcollections.HashTreePMap;
 import org.pcollections.HashTreePSet;
 import org.pcollections.MapPSet;
@@ -23,6 +25,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,15 +36,18 @@ public final class Board implements Serializable {
     /* Instance Variables. Would Be final if not for the need for custom serialization. */
     private PMap<Position, Piece> pieces;
     private Player currentPlayer;
+    private Player winner;
 
     /** Default contructor that creates a game board in the starting configuration. */
     public Board() {
         pieces = START_CONFIGURATION; // Set pieces to start configuration.
         currentPlayer = Player.ATTACKER; // Attacker goes first.
+        winner = null; // Start out with no winner.
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.writeObject(currentPlayer);
+        out.writeObject(winner);
         out.writeInt(pieces.size());
         for(Map.Entry<Position, Piece> entry : pieces.entrySet()) {
             out.writeObject(entry.getKey());
@@ -51,6 +57,7 @@ public final class Board implements Serializable {
 
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         this.currentPlayer = (Player)stream.readObject();
+        this.winner = (Player)stream.readObject();
 
         Map<Position, Piece> pieces = new HashMap<Position, Piece>();
         int size = stream.readInt();
@@ -63,9 +70,10 @@ public final class Board implements Serializable {
     }
 
     /** Instantiate a board with the given values */
-    public Board(PMap<Position, Piece> pieces, Player currentPlayer) {
+    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Player winner) {
         this.pieces = pieces;
         this.currentPlayer = currentPlayer;
+        this.winner = winner;
     }
 
     /** Get the number of pieces currently on the board */
@@ -73,10 +81,17 @@ public final class Board implements Serializable {
         return pieces.size();
     }
 
+    public boolean kingInRefugeeSquare() {
+        return Stream.of(getRefugeeSquares()).anyMatch((Position pos) -> {
+            return pieces.containsKey(pos) && pieces.get(pos).getType() == Piece.Type.KING;
+        });
+    }
+
     /** Step the game forward by one action. Rules are implemented based off of http://aagenielsen.dk/fetlar_rules_en.php */
     public Board step(Action action, EventHandler eventHandler) {
-        assert action.getPlayer() == currentPlayer;
-        assert action != null;
+        Assert.assertNull("A winner has not yet been set", winner);
+        Assert.assertEquals("The provided action is for the currently active player.", action.getPlayer(), currentPlayer);
+        Assert.assertNotNull("Action is non-null.", action);
 
         // TODO: Probably verify move and complain if it's illegal.
         // for now, assume that the move was given by us, and is thus valid.
@@ -99,9 +114,32 @@ public final class Board implements Serializable {
             }
         }
 
-        return new Board(newPieces, Utils.otherPlayer(currentPlayer));
+        // Check to see if someone has won.
+        Player winner = null;
+        Board tempBoard = new Board(newPieces, Utils.otherPlayer(currentPlayer), null);
+        if (tempBoard.kingInRefugeeSquare()) {
+            // If the King is in a refugee square, the defenders win.
+            winner = Player.DEFENDER;
+        } else if (tempBoard.getPieces(Piece.Type.KING).size() == 0){
+            // If the King has been captured, then the attackers win.
+            winner = Player.ATTACKER;
+        } else {
+            // If the next board would result in that player having no actions, then
+            // the current player has won.
+            if(tempBoard.getActions().size() == 0) {
+                winner = currentPlayer;
+            }
+        }
+
+        if(winner != null && eventHandler != null)
+            eventHandler.SetWinner(winner);
+
+        return new Board(newPieces, Utils.otherPlayer(currentPlayer), winner);
     }
     public Board step(Action action) { return step(action, null); }
+
+    public boolean isOver() { return winner != null; }
+    public Player getWinner() { return winner; }
 
     public static boolean isCaptured(PMap<Position, Piece> pieces, Position defendingPos, Position attackingPos) {
         final Piece piece = pieces.get(defendingPos);
@@ -113,38 +151,12 @@ public final class Board implements Serializable {
                     return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
                 });
             case ATTACKER: {
-                /*return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
-                    Position firstPos = defendingPos.getNeighbor(dir);
-                    Position secondPos = defendingPos.getNeighbor(Utils.oppositeDirection(dir));
-
-                    // Attackers can be trapped between the throne, a refugee square, and an hostile piece.
-                    boolean firstPosHostile = CENTER_SQUARE.equals(firstPos)
-                            || getRefugeeSquares().contains(firstPos)
-                            || (pieces.containsKey(firstPos) && pieces.get(firstPos).hostileTo(piece));
-                    boolean secondPosHostile = CENTER_SQUARE.equals(secondPos)
-                            || getRefugeeSquares().contains(secondPos)
-                            || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
-
-                    return firstPosHostile && secondPosHostile;
-                });*/
                 Position oppositePos = defendingPos.getNeighbor(Utils.oppositeDirection(defendingPos.directionTo(attackingPos)));
                 return CENTER_SQUARE.equals(oppositePos)
                         || getRefugeeSquares().contains(oppositePos)
                         || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
             }
             case DEFENDER: {
-                /*return Stream.of(Direction.values()).anyMatch((Direction dir) -> {
-                    Position firstPos = defendingPos.getNeighbor(dir);
-                    Position secondPos = defendingPos.getNeighbor(Utils.oppositeDirection(dir));
-
-                    // Attackers can be trapped between a refugee square, and a defender.
-                    boolean firstPosHostile = getRefugeeSquares().contains(firstPos)
-                            || (pieces.containsKey(firstPos) && pieces.get(firstPos).hostileTo(piece));
-                    boolean secondPosHostile = getRefugeeSquares().contains(secondPos)
-                            || (pieces.containsKey(secondPos) && pieces.get(secondPos).hostileTo(piece));
-
-                    return firstPosHostile && secondPosHostile;
-                });*/
                 Position oppositePos = defendingPos.getNeighbor(Utils.oppositeDirection(defendingPos.directionTo(attackingPos)));
                 return getRefugeeSquares().contains(oppositePos)
                         || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
@@ -166,9 +178,10 @@ public final class Board implements Serializable {
 
     /** Get all of the actions that the piece at the given position can take */
     public Set<Action> getActions(Position position) {
-        assert pieces.containsKey(position);
-
+        Assert.assertTrue(pieces.containsKey(position));
         Set<Action> actions = new HashSet<>();
+        if(winner != null) return actions;
+
         Piece piece = pieces.get(position);
 
         // If the current player does not own the piece, return
@@ -191,6 +204,8 @@ public final class Board implements Serializable {
     /** Get all of the actions that the given player can take. */
     public Set<Action> getActions(Player player) {
         Set<Action> actions = new HashSet<>();
+        if(winner != null) return actions;
+
         for(Map.Entry<Position, Piece> piece : pieces.entrySet()) {
             if (PlayerOwnsPiece(player, piece.getValue()))
                 actions.addAll(getActions(piece.getKey()));
@@ -207,6 +222,15 @@ public final class Board implements Serializable {
 
     public Set<Map.Entry<Position, Piece>> getPieces() {
         return pieces.entrySet();
+    }
+
+    public Set<Map.Entry<Position, Piece>> getPieces(Piece.Type type) {
+        Set<Map.Entry<Position, Piece>> pieces = new HashSet<>();
+        for (Map.Entry<Position, Piece> piece : getPieces()) {
+            if (piece.getValue().getType().equals(type))
+                pieces.add(piece);
+        }
+        return pieces;
     }
 
     /* Static Methods and Variables */

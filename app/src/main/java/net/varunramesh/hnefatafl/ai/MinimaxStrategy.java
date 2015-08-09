@@ -1,5 +1,6 @@
 package net.varunramesh.hnefatafl.ai;
 
+import android.util.Log;
 import android.util.Pair;
 
 import junit.framework.Assert;
@@ -45,11 +46,22 @@ public class MinimaxStrategy implements AIStrategy {
     @Override
     public Action decide(Board board, Set<Action> actions) {
         Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
-        return max(board, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
+        Assert.assertTrue("We need some options to pick from.", board.getActions().size() > 0);
+        Action action = max(board, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
+
+        if (action == null) {
+            Log.e("MinimaxStrategy", "MinimaxStrategy returned null action. Falling back to RandomStrategy.");
+            return new RandomStrategy().decide(board, actions);
+        }
+
+        return action;
     }
 
     /** Evaluate how good the board for us */
     public float eval(Board board) {
+        if(board.isOver())
+            return board.getWinner() == player ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+
         float score = 0.0f;
         for (Map.Entry<Position, Piece> piece : board.getPieces()) {
             if(Board.PlayerOwnsPiece(player, piece.getValue()))
@@ -64,7 +76,7 @@ public class MinimaxStrategy implements AIStrategy {
 
     public Result max(Board board, int depth, float alpha, float beta) {
         Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
-        if(depth == 0) return new Result(null, eval(board));
+        if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result max = null;
         for(Action action : board.getActions()) {
@@ -82,7 +94,7 @@ public class MinimaxStrategy implements AIStrategy {
 
     public Result min(Board board, int depth, float alpha, float beta) {
         Assert.assertFalse("AI Player is not current player.", board.getCurrentPlayer() == player);
-        if(depth == 0) return new Result(null, eval(board));
+        if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result min = null;
         for(Action action : board.getActions()) {
