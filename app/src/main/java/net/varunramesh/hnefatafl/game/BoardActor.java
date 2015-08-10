@@ -1,12 +1,12 @@
 package net.varunramesh.hnefatafl.game;
 
 
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
+import net.varunramesh.hnefatafl.game.livereload.AssetManager;
 import net.varunramesh.hnefatafl.simulator.Position;
 
 /**
@@ -16,8 +16,12 @@ public class BoardActor extends Actor implements LayerActor {
     public static final float SQUARE_SIZE = 2048.0f/11.0f;
 
     private final Texture texture;
+    private final AssetManager assets;
+
     public BoardActor(HnefataflGame game) {
-        texture = game.getTexture("gameboard.png");
+        assets = game.getAssetManager();
+        texture = assets.getTexture("gameboard.png");
+
         setBounds(getX(), getY(), texture.getWidth(), texture.getHeight());
     }
 

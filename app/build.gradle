@@ -56,7 +56,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile 'com.android.support:cardview-v7:22.2.1'
-    compile 'com.android.support:palette-v7:21.0.0'
+    compile 'com.android.support:palette-v7:22.0.0'
     compile 'org.pcollections:pcollections:2.1.2'
     compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
     compile 'com.cocosw:bottomsheet:1.+@aar'
@@ -83,8 +83,8 @@ dependencies {
     // Stream APIs Backported From Java 8
     compile 'com.annimon:stream:1.0.2'
 
-    // GSON Json library
-    compile "com.google.code.gson:gson:2.3.1"
+    // Apache Commons IO
+    compile 'commons-io:commons-io:2.4'
 }
 
 // called every time gradle gets executed, takes the native dependencies of

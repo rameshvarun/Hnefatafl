@@ -1,9 +1,5 @@
 package net.varunramesh.hnefatafl.simulator;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonPrimitive;
-
 import java.io.Serializable;
 
 import static net.varunramesh.hnefatafl.simulator.Piece.Type.*;

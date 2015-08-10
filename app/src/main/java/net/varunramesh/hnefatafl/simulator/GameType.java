@@ -1,15 +1,8 @@
 package net.varunramesh.hnefatafl.simulator;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import org.json.JSONObject;
-
 import java.io.Serializable;
 
-/**
- * Created by Varun on 8/8/2015.
- */
+/** A GameType instance, which is essentially a tagged union. */
 public abstract class GameType implements Serializable {
     abstract public String type();
 

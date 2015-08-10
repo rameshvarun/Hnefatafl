@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -29,6 +28,8 @@ import junit.framework.Assert;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
+import net.varunramesh.hnefatafl.game.livereload.AssetManager;
+import net.varunramesh.hnefatafl.game.livereload.AssetServer;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
@@ -66,24 +67,18 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private Camera cam;
     private Texture done;
 
-    private AssetManager manager;
+    private final AssetManager manager;
+    public AssetManager getAssetManager() { return manager; }
 
     private final Queue<Integer> messageQueue;
     public void postMessage(int message) {
         messageQueue.add(new Integer(message));
     }
 
-    private final HashMap<String, Texture> textures = new HashMap<>();
-    public Texture getTexture(String file) {
-        if(!textures.containsKey(file)) {
-            textures.put(file, new Texture(file));
-        }
-        return textures.get(file);
-    }
-
-    public HnefataflGame(GameState state, Handler uiHandler) {
+    public HnefataflGame(GameState state, Handler uiHandler, AssetManager manager) {
         this.state = state;
         this.uiHandler = uiHandler;
+        this.manager = manager;
         messageQueue = new ConcurrentLinkedQueue<Integer>();
     }
 
@@ -111,20 +106,28 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 Board newBoard = state.currentBoard().step(action, this);
                 state.pushBoard(action, newBoard);
 
-                // Let the player move again, in the SELECT_MOVE state
-                moveState = MoveState.SELECT_MOVE;
+                if(newBoard.isOver()) {
+                    moveState = MoveState.WINNER_DETERMINED;
+                    showWinner();
+                } else {
+                    // Let the player move again, in the SELECT_MOVE state
+                    moveState = MoveState.SELECT_MOVE;
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         }, 1.0f);
+    }
 
-
+    public void showWinner() {
+        // Show Winner Dialog
+        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_WINNER);
     }
 
     @Override
-    public void MovePiece(Position from, Position to) {
+    public void movePiece(Position from, Position to) {
         Log.d(TAG, "Move piece from " + from.toString() + " to " + to.toString() + ".");
         PieceActor actor = getPieceActorAt(from);
         assert actor != null;
@@ -132,7 +135,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     }
 
     @Override
-    public void RemovePiece(Position position) {
+    public void removePiece(Position position) {
         Log.d(TAG, "Removed piece from " + position.toString() + ".");
         PieceActor actor = getPieceActorAt(position);
         assert actor != null;
@@ -140,15 +143,19 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         actor.capture();
     }
 
+    private Player winner;
+
     @Override
-    public void SetWinner(Player player) {
+    public void setWinner(Player player) {
         Log.d(TAG, player + " won the game.");
+        winner = player;
     }
 
     public static enum MoveState {
         SELECT_MOVE,
         CONFIRM_MOVE,
-        AI_MOVE
+        AI_MOVE,
+        WINNER_DETERMINED
     }
     private MoveState moveState;
     public MoveState getMoveState() { return moveState; }
@@ -158,7 +165,6 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         cam = stage.getCamera();
-        manager = new AssetManager();
 
         // Create game board.
         boardActor = new BoardActor(this);
@@ -210,9 +216,14 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         stagedAction = action;
         stagedBoard = state.currentBoard().step(stagedAction, this);
 
-        // Transition into the CONFIRM_MOVE state
-        moveState = MoveState.CONFIRM_MOVE;
-        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+        if(stagedBoard.isOver()) {
+            moveState = MoveState.WINNER_DETERMINED;
+            showWinner();
+        } else {
+            // Transition into the CONFIRM_MOVE state
+            moveState = MoveState.CONFIRM_MOVE;
+            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+        }
     }
 
     /** Call when in CONFIRM_MOVE state to revert the move */
@@ -317,6 +328,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     @Override
     public void render () {
+        manager.update();
+
         float aspect = (float)stage.getViewport().getScreenWidth() / stage.getViewport().getScreenHeight();
         Vector2 idealSize = new Vector2(2048, 2048 + 100);
         if(idealSize.x > idealSize.y*aspect)

@@ -21,7 +21,7 @@ public class SelectionMarker extends Actor implements LayerActor {
     private final Position position;
 
     public SelectionMarker(HnefataflGame game, Position position){
-        texture = new Texture("selectionmarker.png");
+        texture = game.getAssetManager().getTexture("selectionmarker.png");
         region = new TextureRegion(texture);
         this.position = position;
 

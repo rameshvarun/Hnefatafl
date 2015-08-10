@@ -1,20 +1,11 @@
 package net.varunramesh.hnefatafl.simulator;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
-
 import com.annimon.stream.Stream;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 import junit.framework.Assert;
 
 import org.pcollections.HashTreePMap;
 import org.pcollections.HashTreePSet;
-import org.pcollections.MapPSet;
 import org.pcollections.PMap;
 import org.pcollections.PSet;
 
@@ -22,10 +13,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,7 +89,7 @@ public final class Board implements Serializable {
         Piece piece = pieces.get(action.getFrom());
         PMap<Position, Piece> newPieces = pieces.minus(action.getFrom());
         newPieces = newPieces.plus(action.getTo(), piece);
-        if(eventHandler != null) eventHandler.MovePiece(action.getFrom(), action.getTo());
+        if(eventHandler != null) eventHandler.movePiece(action.getFrom(), action.getTo());
 
         // Look to see if any adjacent opposing piece has been sandwiched.
         for(Direction dir : Direction.values()) {
@@ -109,7 +98,7 @@ public final class Board implements Serializable {
                 Piece adjacentPiece = newPieces.get(pos);
                 if(adjacentPiece.hostileTo(piece) && Board.isCaptured(newPieces, pos, action.getTo())) {
                     newPieces = newPieces.minus(pos);
-                    if(eventHandler != null) eventHandler.RemovePiece(pos);
+                    if(eventHandler != null) eventHandler.removePiece(pos);
                 }
             }
         }
@@ -132,7 +121,7 @@ public final class Board implements Serializable {
         }
 
         if(winner != null && eventHandler != null)
-            eventHandler.SetWinner(winner);
+            eventHandler.setWinner(winner);
 
         return new Board(newPieces, Utils.otherPlayer(currentPlayer), winner);
     }
