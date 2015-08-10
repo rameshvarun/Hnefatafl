@@ -7,6 +7,7 @@ import (
     "net/http"
     "path/filepath"
     "io/ioutil"
+    "bytes"
 )
 
 
@@ -34,10 +35,17 @@ func main() {
             case ev := <-watcher.Event:
                 log.Println("event:", ev)
 				if ev.IsModify() {
+                    // Read file data
+                    data, err := ioutil.ReadFile(ev.Name)
+                    if err != nil {
+                        log.Println(err)
+                        break
+                    }
+
                     normalized := filepath.Clean(ev.Name)
                     url := "http://" + *server + "/" + normalized;
                     log.Println("PUT " + url)
-                    req, err := http.NewRequest("PUT", url, nil)
+                    req, err := http.NewRequest("PUT", url, bytes.NewBuffer(data))
                     if err != nil {
                         log.Println(err)
                         break
