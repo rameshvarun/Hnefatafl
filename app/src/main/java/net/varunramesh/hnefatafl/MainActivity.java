@@ -31,8 +31,6 @@ import net.varunramesh.hnefatafl.simulator.Player;
 public class MainActivity extends BaseGameActivity {
 
     private MaterialViewPager mViewPager;
-    private DrawerLayout mDrawer;
-    private ActionBarDrawerToggle mDrawerToggle;
     private Toolbar toolbar;
 
     private final static int RC_SELECT_PLAYERS = 10000;
@@ -51,23 +49,20 @@ public class MainActivity extends BaseGameActivity {
 
         mViewPager = (MaterialViewPager) findViewById(R.id.materialViewPager);
         toolbar = mViewPager.getToolbar();
-        mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         if (toolbar != null) {
             setSupportActionBar(toolbar);
 
             final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
-                actionBar.setDisplayHomeAsUpEnabled(true);
-                actionBar.setDisplayShowHomeEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(false);
+                actionBar.setDisplayShowHomeEnabled(false);
+                actionBar.setHomeButtonEnabled(false);
+
                 actionBar.setDisplayShowTitleEnabled(true);
                 actionBar.setDisplayUseLogoEnabled(false);
-                actionBar.setHomeButtonEnabled(true);
             }
         }
-
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawer, 0, 0);
-        mDrawer.setDrawerListener(mDrawerToggle);
 
         mViewPager.getViewPager().setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             @Override
