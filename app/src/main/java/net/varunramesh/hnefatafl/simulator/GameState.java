@@ -1,5 +1,7 @@
 package net.varunramesh.hnefatafl.simulator;
 
+import com.annimon.stream.function.Consumer;
+
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Date;
@@ -21,12 +23,19 @@ public class GameState implements Serializable {
 
     /** A unique id to reference this game */
     private final UUID uuid;
+    public UUID getUUID() { return uuid; }
 
     /** The date when the game was created */
     private final Date createdDate;
+    public Date getCreatedDate() { return createdDate; }
 
     /** The date when the last move was made. */
     private Date lastMoveDate;
+    public Date getLastMoveDate() { return lastMoveDate; }
+
+    /** A function that can be produced */
+    private transient Persister persister;
+    public void setPersister(Persister persister) { this.persister = persister; }
 
     public GameState(GameType type) {
         this.type = type;
@@ -47,6 +56,11 @@ public class GameState implements Serializable {
         this.actions.push(action);
         this.boards.push(board);
         this.lastMoveDate = new Date();
+
+        // Try to persist the game state.
+        if(this.persister != null) {
+            this.persister.persist(this);
+        }
     }
 
     /** Get the GameType of this GameState */

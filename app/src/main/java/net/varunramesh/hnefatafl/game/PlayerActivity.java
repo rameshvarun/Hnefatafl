@@ -1,5 +1,6 @@
 package net.varunramesh.hnefatafl.game;
 
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.media.Image;
@@ -26,23 +27,30 @@ import com.gc.materialdesign.widgets.Dialog;
 import com.gc.materialdesign.widgets.SnackBar;
 
 import net.varunramesh.hnefatafl.R;
+import net.varunramesh.hnefatafl.SavedGame;
 import net.varunramesh.hnefatafl.game.HnefataflGame;
 import net.varunramesh.hnefatafl.game.livereload.AssetServer;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.Player;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+
+import io.realm.Realm;
 
 /**
  * Created by Varun on 7/23/2015.
  */
 public class PlayerActivity extends AndroidApplication {
+    private static final String TAG = "PlayerActivity";
+
     private static final boolean DEBUG = true;
     private final AssetServer assetServer;
 
     public PlayerActivity() {
         super();
-
         if(DEBUG) {
             assetServer  = new AssetServer();
         } else {
@@ -111,6 +119,8 @@ public class PlayerActivity extends AndroidApplication {
             }
         };
 
+        final Activity activity = this;
+
         // Make this activity fullscreen.
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -122,6 +132,36 @@ public class PlayerActivity extends AndroidApplication {
         Bundle extras = getIntent().getExtras();
         assert extras.containsKey("GameState");
         GameState gameState = (GameState)(extras.getSerializable("GameState"));
+
+        // Specify how to persist the game state.
+        gameState.setPersister((GameState state) -> {
+            // Ream IO instance
+            Realm realm = Realm.getInstance(activity);
+
+            Log.d(TAG, "Persisting game state: " + state.getUUID());
+
+            realm.beginTransaction();
+            SavedGame game = realm.where(SavedGame.class).equalTo("id", state.getUUID().toString()).findFirst();
+            if (game == null) {
+                game = realm.createObject(SavedGame.class);
+                game.setId(state.getUUID().toString());
+                game.setCreatedDate(state.getCreatedDate());
+                Log.d(TAG, "Existing state not found. Creating new one.");
+            }
+
+            game.setLastMoveDate(state.getLastMoveDate());
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            try {
+                ObjectOutput out = new ObjectOutputStream(bos);
+                out.writeObject(state);
+                game.setData(bos.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                realm.commitTransaction();
+            }
+        });
 
         // Create the game view.
         final HnefataflGame game = new HnefataflGame(gameState, handler, assetServer);

@@ -85,6 +85,9 @@ dependencies {
 
     // Apache Commons IO
     compile 'commons-io:commons-io:2.4'
+
+    // Realm.io
+    compile 'io.realm:realm-android:0.82.1'
 }
 
 // called every time gradle gets executed, takes the native dependencies of
