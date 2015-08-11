@@ -15,6 +15,8 @@ import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapte
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
+
 /**
  * Created by florentchampigny on 24/04/15.
  */
@@ -22,10 +24,6 @@ public class RecyclerViewFragment extends Fragment {
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
-
-    private static final int ITEM_COUNT = 100;
-
-    private List<Object> mContentItems = new ArrayList<>();
 
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
@@ -39,15 +37,17 @@ public class RecyclerViewFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        final Realm realm = Realm.getInstance(view.getContext());
+        List<SavedGame> savedGames = realm.allObjectsSorted(SavedGame.class, "createdDate", false);
+
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
 
-        for (int i = 0; i < ITEM_COUNT; ++i)
-            mContentItems.add(new Object());
 
-        mAdapter = new RecyclerViewMaterialAdapter(new TestRecyclerViewAdapter(mContentItems));
+        mAdapter = new RecyclerViewMaterialAdapter(new SavedGameViewAdapter(savedGames));
         mRecyclerView.setAdapter(mAdapter);
 
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
