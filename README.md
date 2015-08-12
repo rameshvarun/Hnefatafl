@@ -1,7 +1,31 @@
 # Hnefatafl
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Overview](#overview)
+- [Live Reload](#live-reload)
+- [Programming Patterns](#programming-patterns)
+  - [Retrolabmda](#retrolabmda)
+  - [Stream API Backport](#stream-api-backport)
+  - [Other](#other)
+- [Packages](#packages)
+- [Assets Used](#assets-used)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Overview
+Hnefatafl is a family of 2-player Viking board games, where one player tries to guide a King to a refugee square, while attackers try to prevent this. Right now, we're implementing the popular 11x11 variant - Feltar Hnefatafl.
+
+## Live Reload
+Right now, there is a rudimentary way to reload textures while the game is running. It consists of starting an HTTP server on the device, and having a client upload files as they are saved.
+
+- [Client](./assetreload) - written in Go. Watches for changes to a directory and tries to upload the new files.
+- [Server](./app/src/main/java/net/varunramesh/hnefatafl/game/livereload) - Server that runs on the device and listens for PUT requests.
+
+
 ## Programming Patterns
-### Retrolabmda
+### Retrolambda
 Right now, we're using Retrolambda, which lets you use Java 8 lambda syntax. Essentially, this works in any situation in which you would create an anonymous class from an single-function interface.
 ```java
 builder.setTitle("You Have Won The Game.")
