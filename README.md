@@ -4,9 +4,9 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Overview](#overview)
-- [Live Reload](#live-reload)
+- [Asset Reload](#asset-reload)
 - [Programming Patterns](#programming-patterns)
-  - [Retrolabmda](#retrolabmda)
+  - [Retrolambda](#retrolambda)
   - [Stream API Backport](#stream-api-backport)
   - [Other](#other)
 - [Packages](#packages)
@@ -17,7 +17,7 @@
 ## Overview
 Hnefatafl is a family of 2-player Viking board games, where one player tries to guide a King to a refugee square, while attackers try to prevent this. Right now, we're implementing the popular 11x11 variant - Feltar Hnefatafl.
 
-## Live Reload
+## Asset Reload
 Right now, there is a rudimentary way to reload textures while the game is running. It consists of starting an HTTP server on the device, and having a client upload files as they are saved.
 
 - [Client](./assetreload) - written in Go. Watches for changes to a directory and tries to upload the new files.
@@ -44,7 +44,10 @@ return Stream.of(Direction.values()).allMatch((Direction dir) -> {
 ```
 
 ### Other
+- Generally avoid nulls
 - Try to use `final` wherever it makes sense.
+- Prefer creating a getter over simply making a variable public (yeah I know, it's verbose, but it communicates that outside classes shouldn't just change the value)
+- Prefer composition over inheritance (Gang of Four / Effective Java advice)
 
 ## Packages
 - [Simulator](./app/src/main/java/net/varunramesh/hnefatafl/simulator) - The simulator handles all of the rules of Hnefatafl, exporting the `Board`class that represents the state of a game.
