@@ -26,7 +26,7 @@ public class MoveMarker extends Actor implements LayerActor {
     private final PieceActor piece;
 
     public MoveMarker(HnefataflGame game, PieceActor piece, Action action) {
-        texture = game.getAssetManager().getTexture("movemarker.png");
+        texture = game.getTexture("movemarker.png");
         region = new TextureRegion(texture);
 
         this.action = action;
