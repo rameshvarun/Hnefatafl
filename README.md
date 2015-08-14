@@ -4,7 +4,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Overview](#overview)
-- [Asset Reload](#asset-reload)
 - [Programming Patterns](#programming-patterns)
   - [Retrolambda](#retrolambda)
   - [Stream API Backport](#stream-api-backport)
@@ -16,13 +15,6 @@
 
 ## Overview
 Hnefatafl is a family of 2-player Viking board games, where one player tries to guide a King to a refugee square, while attackers try to prevent this. Right now, we're implementing the popular 11x11 variant - Feltar Hnefatafl.
-
-## Asset Reload
-Right now, there is a rudimentary way to reload textures while the game is running. It consists of starting an HTTP server on the device, and having a client upload files as they are saved.
-
-- [Client](./assetreload) - written in Go. Watches for changes to a directory and tries to upload the new files.
-- [Server](./app/src/main/java/net/varunramesh/hnefatafl/game/livereload) - Server that runs on the device and listens for PUT requests.
-
 
 ## Programming Patterns
 ### Retrolambda

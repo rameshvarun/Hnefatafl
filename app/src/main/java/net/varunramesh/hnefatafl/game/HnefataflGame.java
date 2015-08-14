@@ -28,8 +28,6 @@ import junit.framework.Assert;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
-import net.varunramesh.hnefatafl.game.livereload.AssetManager;
-import net.varunramesh.hnefatafl.game.livereload.AssetServer;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
@@ -65,20 +63,22 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private BoardActor boardActor;
     private Stage stage;
     private Camera cam;
-    private Texture done;
 
-    private final AssetManager manager;
-    public AssetManager getAssetManager() { return manager; }
+    private final HashMap<String, Texture> textures = new HashMap<>();
+    public synchronized Texture getTexture(String textureFile) {
+        if(!textures.containsKey(textureFile))
+            textures.put(textureFile, new Texture(textureFile));
+        return textures.get(textureFile);
+    }
 
     private final Queue<Integer> messageQueue;
     public void postMessage(int message) {
         messageQueue.add(new Integer(message));
     }
 
-    public HnefataflGame(GameState state, Handler uiHandler, AssetManager manager) {
+    public HnefataflGame(GameState state, Handler uiHandler) {
         this.state = state;
         this.uiHandler = uiHandler;
-        this.manager = manager;
         messageQueue = new ConcurrentLinkedQueue<Integer>();
     }
 
@@ -328,8 +328,6 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     @Override
     public void render () {
-        manager.update();
-
         float aspect = (float)stage.getViewport().getScreenWidth() / stage.getViewport().getScreenHeight();
         Vector2 idealSize = new Vector2(2048, 2048 + 100);
         if(idealSize.x > idealSize.y*aspect)

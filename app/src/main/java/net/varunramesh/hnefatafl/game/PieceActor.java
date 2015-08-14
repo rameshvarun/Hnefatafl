@@ -18,7 +18,6 @@ import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.google.android.gms.common.api.Api;
 
-import net.varunramesh.hnefatafl.game.livereload.AssetManager;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -36,7 +35,6 @@ public class PieceActor extends Actor implements LayerActor {
 
     private Position boardPosition;
     private final HnefataflGame game;
-    private final AssetManager assets;
 
     @Override
     public Actor hit (float x, float y, boolean touchable) {
@@ -45,17 +43,16 @@ public class PieceActor extends Actor implements LayerActor {
 
     public PieceActor(HnefataflGame game, Piece.Type type, Position boardPos){
         this.game = game;
-        this.assets = game.getAssetManager();
 
         switch(type) {
             case KING:
-                texture = assets.getTexture("king.png");
+                texture = game.getTexture("king.png");
                 break;
             case DEFENDER:
-                texture = assets.getTexture("defender.png");
+                texture = game.getTexture("defender.png");
                 break;
             case ATTACKER:
-                texture = assets.getTexture("attacker.png");
+                texture = game.getTexture("attacker.png");
                 break;
             default:
                 throw new UnsupportedOperationException();

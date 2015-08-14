@@ -29,7 +29,6 @@ import com.gc.materialdesign.widgets.SnackBar;
 import net.varunramesh.hnefatafl.R;
 import net.varunramesh.hnefatafl.SavedGame;
 import net.varunramesh.hnefatafl.game.HnefataflGame;
-import net.varunramesh.hnefatafl.game.livereload.AssetServer;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.Player;
 
@@ -45,19 +44,6 @@ import io.realm.Realm;
  */
 public class PlayerActivity extends AndroidApplication {
     private static final String TAG = "PlayerActivity";
-
-    private static final boolean DEBUG = true;
-    private final AssetServer assetServer;
-
-    public PlayerActivity() {
-        super();
-        if(DEBUG) {
-            assetServer  = new AssetServer();
-        } else {
-            assetServer = null;
-        }
-    }
-
 
     private Animation bottomUp;
     public void showMoveConfirmButtons() {
@@ -164,7 +150,7 @@ public class PlayerActivity extends AndroidApplication {
         });
 
         // Create the game view.
-        final HnefataflGame game = new HnefataflGame(gameState, handler, assetServer);
+        final HnefataflGame game = new HnefataflGame(gameState, handler);
         View gameView = initializeForView(game, config);
 
         // Add the game view to the framelayout
@@ -188,30 +174,5 @@ public class PlayerActivity extends AndroidApplication {
         });
 
         hideMoveConfirmation();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if(DEBUG) {
-            try {
-                assetServer.start(2*60*1000);
-                Dialog dialog = new Dialog(this, "Asset server started.", "Server started at " + assetServer.getURL());
-                dialog.show();
-            } catch(IOException e) {
-                e.printStackTrace();
-                new SnackBar(this, "Could not start asset server.", null, null).show();
-            }
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        if(DEBUG) {
-            assetServer.stop();
-        }
     }
 }
