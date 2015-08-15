@@ -127,7 +127,13 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     public void showWinner() {
         // Show Winner Dialog
-        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_WINNER);
+        if(state.getType() instanceof GameType.PlayerVsAI){
+            GameType.PlayerVsAI pvai = (GameType.PlayerVsAI) state.getType();
+            if(pvai.getHumanPlayer() == winner) uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_PLAYER_WIN);
+            else uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_PLAYER_LOSS);
+        }else{
+            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_WINNER);
+        }
     }
 
     @Override

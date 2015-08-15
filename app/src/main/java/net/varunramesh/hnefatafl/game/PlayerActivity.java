@@ -2,6 +2,7 @@ package net.varunramesh.hnefatafl.game;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.media.Image;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.alertdialogpro.AlertDialogPro;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.gc.materialdesign.widgets.Dialog;
@@ -30,6 +32,7 @@ import net.varunramesh.hnefatafl.R;
 import net.varunramesh.hnefatafl.SavedGame;
 import net.varunramesh.hnefatafl.game.HnefataflGame;
 import net.varunramesh.hnefatafl.simulator.GameState;
+import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
 
 import java.io.ByteArrayOutputStream;
@@ -70,8 +73,18 @@ public class PlayerActivity extends AndroidApplication {
     }
 
     public void showWinnerDialog() {
+        showWinnerDialog("You Have Lost or Won The Game.");
+    }
+
+    public void showWinnerDialog(boolean wonGame) {
+        if(wonGame) showWinnerDialog("You Have Won the Game!");
+        else showWinnerDialog("You Have Lost the Game :(");
+    }
+
+    private void showWinnerDialog(String title) {
+
         AlertDialogPro.Builder builder = new AlertDialogPro.Builder(this);
-        builder.setTitle("You Have Lost or Won The Game.")
+        builder.setTitle(title)
                 .setPositiveButton("Return to Menu", (DialogInterface sideDialog, int which) -> {
                     NavUtils.navigateUpFromSameTask(this);
                 }).show();
@@ -80,14 +93,25 @@ public class PlayerActivity extends AndroidApplication {
     public static final int MESSAGE_SHOW_CONFIRMATION = 1;
     public static final int MESSAGE_HIDE_CONFIRMATION = 2;
     public static final int MESSAGE_UPDATE_CURRENT_PLAYER = 3;
-    public static final int MESSAGE_SHOW_WINNER = 4;
+    public static final int MESSAGE_SHOW_PLAYER_WIN = 4;
+    public static final int MESSAGE_SHOW_PLAYER_LOSS = 5;
+    public static final int MESSAGE_SHOW_WINNER = 6;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final Activity activity = this;
+
+        // Make this activity fullscreen.
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+
+        AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+
         // Create a handler for recieving messages from other threads.
-        Handler handler = new Handler() {
+        handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch(msg.what) {
@@ -99,20 +123,18 @@ public class PlayerActivity extends AndroidApplication {
                         break;
                     case MESSAGE_UPDATE_CURRENT_PLAYER:
                         throw new UnsupportedOperationException();
+                    case MESSAGE_SHOW_PLAYER_WIN:
+                        showWinnerDialog(true);
+                        break;
+                    case MESSAGE_SHOW_PLAYER_LOSS:
+                        showWinnerDialog(false);
+                        break;
                     case MESSAGE_SHOW_WINNER:
                         showWinnerDialog();
+                        break;
                 }
             }
         };
-
-        final Activity activity = this;
-
-        // Make this activity fullscreen.
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-
-        AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 
         // Load GameState from bundle extras.
         Bundle extras = getIntent().getExtras();
