@@ -26,15 +26,18 @@ public final class Board implements Serializable {
     private PMap<Position, Piece> pieces;
     private Player currentPlayer;
     private Player winner;
+    private int boardSize;
 
     /** Default contructor that creates a game board in the starting configuration. */
     public Board() {
+        boardSize = 11;
         pieces = START_CONFIGURATION; // Set pieces to start configuration.
         currentPlayer = Player.ATTACKER; // Attacker goes first.
         winner = null; // Start out with no winner.
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
+        out.writeInt(boardSize);
         out.writeObject(currentPlayer);
         out.writeObject(winner);
         out.writeInt(pieces.size());
@@ -45,6 +48,7 @@ public final class Board implements Serializable {
     }
 
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        this.boardSize = stream.readInt();
         this.currentPlayer = (Player)stream.readObject();
         this.winner = (Player)stream.readObject();
 
@@ -59,16 +63,17 @@ public final class Board implements Serializable {
     }
 
     /** Instantiate a board with the given values */
-    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Player winner) {
+    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Player winner, int boardSize) {
         this.pieces = pieces;
         this.currentPlayer = currentPlayer;
         this.winner = winner;
+        this.boardSize = boardSize;
     }
 
     /** Get the number of pieces currently on the board */
-    public int getNumberOfPieces() {
-        return pieces.size();
-    }
+    public int getNumberOfPieces() { return pieces.size(); }
+    /** Get the size of the board. Can safely assume that the board is allways a square */
+    public int getBoardSize() { return boardSize; }
 
     public boolean kingInRefugeeSquare() {
         return Stream.of(getRefugeeSquares()).anyMatch((Position pos) -> {
@@ -105,7 +110,7 @@ public final class Board implements Serializable {
 
         // Check to see if someone has won.
         Player winner = null;
-        Board tempBoard = new Board(newPieces, Utils.otherPlayer(currentPlayer), null);
+        Board tempBoard = new Board(newPieces, Utils.otherPlayer(currentPlayer), null, boardSize);
         if (tempBoard.kingInRefugeeSquare()) {
             // If the King is in a refugee square, the defenders win.
             winner = Player.DEFENDER;
@@ -123,7 +128,7 @@ public final class Board implements Serializable {
         if(winner != null && eventHandler != null)
             eventHandler.setWinner(winner);
 
-        return new Board(newPieces, Utils.otherPlayer(currentPlayer), winner);
+        return new Board(newPieces, Utils.otherPlayer(currentPlayer), winner, boardSize);
     }
     public Board step(Action action) { return step(action, null); }
 

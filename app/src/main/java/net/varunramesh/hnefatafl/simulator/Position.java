@@ -31,6 +31,11 @@ public final class Position implements Serializable {
         throw new UnsupportedOperationException();
     }
 
+    /** Returns the manhattan distance to another position */
+    public int distanceTo(Position other) {
+        return Math.abs(other.x - x) + Math.abs(other.y - y);
+    }
+
     public Direction directionTo(Position other) {
         if (x == other.x) {
             if (other.y > y) return Direction.UP;
