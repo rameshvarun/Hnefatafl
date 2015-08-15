@@ -95,7 +95,7 @@ public class MinimaxStrategy implements AIStrategy {
         }
 
         // Find the shortest distance between the King and any corner of the board.
-        for(Map.Entry<Position, Piece> king : board.getPieces(Piece.Type.KING)) {
+        for(Map.Entry<Position, Piece> king : board.getPieces(Piece.KING)) {
             int topLeftDist = king.getKey().distanceTo(new Position(0, 0));
             int topRightDist = king.getKey().distanceTo(new Position(board.getBoardSize() - 1, 0));
             int bottomLeftDist = king.getKey().distanceTo(new Position(0, board.getBoardSize() - 1));

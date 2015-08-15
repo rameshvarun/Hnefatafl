@@ -1,31 +1,16 @@
 package net.varunramesh.hnefatafl.simulator;
 
-import java.io.Serializable;
-
-import static net.varunramesh.hnefatafl.simulator.Piece.Type.*;
-
 /**
- * Created by varunramesh on 7/22/15.
+ * Enum that represents the possible piece types.
  */
-public final class Piece implements Serializable {
+public enum Piece {
+    ATTACKER,
+    DEFENDER,
+    KING;
     public boolean hostileTo(Piece other) {
-        if(type == ATTACKER)
-            return other.getType() == DEFENDER || other.getType() == KING;
+        if(this == ATTACKER)
+            return other == DEFENDER || other == KING;
         else
-            return other.getType() == ATTACKER;
+            return other == ATTACKER;
     }
-
-    public static enum Type {
-        ATTACKER,
-        DEFENDER,
-        KING
-    }
-
-    private final Type type;
-
-    Piece(Type type) {
-        this.type = type;
-    }
-
-    public Type getType() { return type; }
 }

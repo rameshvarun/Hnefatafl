@@ -354,7 +354,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
         // Add in the new actors.
         for(Map.Entry<Position, Piece> piece : board.getPieces()) {
-            PieceActor actor = new PieceActor(this, piece.getValue().getType(), piece.getKey());
+            PieceActor actor = new PieceActor(this, piece.getValue(), piece.getKey());
             stage.addActor(actor);
             pieceActors.add(actor);
         }
