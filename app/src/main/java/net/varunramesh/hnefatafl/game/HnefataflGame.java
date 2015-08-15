@@ -8,11 +8,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.input.GestureDetector.GestureAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -62,7 +65,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     private BoardActor boardActor;
     private Stage stage;
-    private Camera cam;
+    private OrthographicCamera cam;
+    private GestureAdapter controller;
 
     private final HashMap<String, Texture> textures = new HashMap<>();
     public synchronized Texture getTexture(String textureFile) {
@@ -162,9 +166,10 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     @Override
     public void create () {
-        stage = new Stage(new ScreenViewport());
+
+        cam = new OrthographicCamera();
+        stage = new Stage(new ScreenViewport(cam));
         Gdx.input.setInputProcessor(stage);
-        cam = stage.getCamera();
 
         // Create game board.
         boardActor = new BoardActor(this);
@@ -179,6 +184,32 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         }
 
         cam.position.set(boardActor.getWidth() / 2, boardActor.getHeight() / 2, cam.position.z);
+
+        /** Pinch-zoom functionality **/
+        controller = new GestureAdapter(){
+
+            float initialScale = 1;
+
+            @Override
+            public boolean touchDown(float x, float y, int pointer, int button){
+                initialScale = cam.zoom;
+                return false;
+            }
+
+            @Override
+            public boolean zoom(float originalDistance, float currentDistance){
+                float ratio = originalDistance / currentDistance;
+                cam.zoom = initialScale * ratio;
+                return false;
+            }
+
+            @Override
+            public boolean pinch(Vector2 initialFirstPointer, Vector2 initialSecondPointer,
+                                 Vector2 firstPointer, Vector2 secondPointer){
+                return false;
+            }
+        };
+
 
         if (state.getType() instanceof GameType.PassAndPlay) {
             moveState = MoveState.SELECT_MOVE;

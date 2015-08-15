@@ -28,7 +28,7 @@ The [HenfataflGame](../game/HnefataflGame.java) class implements this interface,
 
 When a user has to take a turn `Board#getActions` returns a list of legal Actions for them to take.
 
-One not about actions is that we can reconstruct a game state simply by taking the starting board and replaying all of the actions.
+One note about actions is that we can reconstruct a game state simply by taking the starting board and replaying all of the actions.
 
 ## Position
 Simple Immutable class that holds a board position (x and y coordinates).
