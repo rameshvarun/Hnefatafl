@@ -28,12 +28,15 @@ import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.gc.materialdesign.widgets.Dialog;
 import com.gc.materialdesign.widgets.SnackBar;
 
+import junit.framework.Assert;
+
 import net.varunramesh.hnefatafl.R;
 import net.varunramesh.hnefatafl.SavedGame;
 import net.varunramesh.hnefatafl.game.HnefataflGame;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
+import net.varunramesh.hnefatafl.simulator.Winner;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -72,16 +75,21 @@ public class PlayerActivity extends AndroidApplication {
         move_confirm_view.startAnimation(bottomDown);
     }
 
-    public void showWinnerDialog() {
-        showWinnerDialog("You Have Lost or Won The Game.");
-    }
+    private void showWinnerDialog(Winner winner) {
+        Assert.assertTrue("The winner has been determined", winner != Winner.UNDETERMINED);
 
-    public void showWinnerDialog(boolean wonGame) {
-        if(wonGame) showWinnerDialog("You Have Won the Game!");
-        else showWinnerDialog("You Have Lost the Game :(");
-    }
-
-    private void showWinnerDialog(String title) {
+        String title = "";
+        if (winner == Winner.DRAW) title = "Tie Game!";
+        else {
+            if(gameState.getType() instanceof GameType.PassAndPlay) {
+                if(winner == Winner.ATTACKER) title = "The attackers win!";
+                else title = "The defenders win!";
+            } else if(gameState.getType() instanceof GameType.PlayerVsAI) {
+                GameType.PlayerVsAI pvai = (GameType.PlayerVsAI) gameState.getType();
+                if(pvai.getHumanPlayer() == winner.toPlayer()) title = "You Have Won the Game!";
+                else title = "You Have Lost the Game :(";
+            }
+        }
 
         AlertDialogPro.Builder builder = new AlertDialogPro.Builder(this);
         builder.setTitle(title)
@@ -93,9 +101,9 @@ public class PlayerActivity extends AndroidApplication {
     public static final int MESSAGE_SHOW_CONFIRMATION = 1;
     public static final int MESSAGE_HIDE_CONFIRMATION = 2;
     public static final int MESSAGE_UPDATE_CURRENT_PLAYER = 3;
-    public static final int MESSAGE_SHOW_PLAYER_WIN = 4;
-    public static final int MESSAGE_SHOW_PLAYER_LOSS = 5;
-    public static final int MESSAGE_SHOW_WINNER = 6;
+    public static final int MESSAGE_SHOW_WINNER = 4;
+
+    public GameState gameState;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -110,6 +118,11 @@ public class PlayerActivity extends AndroidApplication {
 
         AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 
+        // Load GameState from bundle extras.
+        Bundle extras = getIntent().getExtras();
+            Assert.assertTrue(extras.containsKey("GameState"));
+        gameState = (GameState)(extras.getSerializable("GameState"));
+
         // Create a handler for recieving messages from other threads.
         handler = new Handler() {
             @Override
@@ -123,23 +136,12 @@ public class PlayerActivity extends AndroidApplication {
                         break;
                     case MESSAGE_UPDATE_CURRENT_PLAYER:
                         throw new UnsupportedOperationException();
-                    case MESSAGE_SHOW_PLAYER_WIN:
-                        showWinnerDialog(true);
-                        break;
-                    case MESSAGE_SHOW_PLAYER_LOSS:
-                        showWinnerDialog(false);
-                        break;
                     case MESSAGE_SHOW_WINNER:
-                        showWinnerDialog();
+                        showWinnerDialog((Winner)msg.obj);
                         break;
                 }
             }
         };
-
-        // Load GameState from bundle extras.
-        Bundle extras = getIntent().getExtras();
-        assert extras.containsKey("GameState");
-        GameState gameState = (GameState)(extras.getSerializable("GameState"));
 
         // Specify how to persist the game state.
         gameState.setPersister((GameState state) -> {

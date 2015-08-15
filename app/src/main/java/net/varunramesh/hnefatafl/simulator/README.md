@@ -43,3 +43,6 @@ Represents `ATTACKER`, `DEFENDER`, and `KING` piece types.
 
 ### Player
 Represents either the `ATTACKER` or `DEFENDER` player.
+
+### Winner
+Represents the current winner of a game. `UNDETERMINED` means that the game is still in progress. `ATTACKER` and `DEFENDER` represent that that player has won the game. `DRAW` represents a drawn / tie game.

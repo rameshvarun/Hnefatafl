@@ -25,7 +25,7 @@ public final class Board implements Serializable {
     /* Instance Variables. Would Be final if not for the need for custom serialization. */
     private PMap<Position, Piece> pieces;
     private Player currentPlayer;
-    private Player winner;
+    private Winner winner;
     private int boardSize;
 
     /** Default contructor that creates a game board in the starting configuration. */
@@ -33,7 +33,7 @@ public final class Board implements Serializable {
         boardSize = 11;
         pieces = START_CONFIGURATION; // Set pieces to start configuration.
         currentPlayer = Player.ATTACKER; // Attacker goes first.
-        winner = null; // Start out with no winner.
+        winner = Winner.UNDETERMINED; // Start out with no winner.
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -50,7 +50,7 @@ public final class Board implements Serializable {
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         this.boardSize = stream.readInt();
         this.currentPlayer = (Player)stream.readObject();
-        this.winner = (Player)stream.readObject();
+        this.winner = (Winner)stream.readObject();
 
         Map<Position, Piece> pieces = new HashMap<Position, Piece>();
         int size = stream.readInt();
@@ -63,7 +63,7 @@ public final class Board implements Serializable {
     }
 
     /** Instantiate a board with the given values */
-    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Player winner, int boardSize) {
+    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Winner winner, int boardSize) {
         this.pieces = pieces;
         this.currentPlayer = currentPlayer;
         this.winner = winner;
@@ -83,7 +83,7 @@ public final class Board implements Serializable {
 
     /** Step the game forward by one action. Rules are implemented based off of http://aagenielsen.dk/fetlar_rules_en.php */
     public Board step(Action action, EventHandler eventHandler) {
-        Assert.assertNull("A winner has not yet been set", winner);
+        Assert.assertEquals("A winner has not yet been set", this.winner, Winner.UNDETERMINED);
         Assert.assertEquals("The provided action is for the currently active player.", action.getPlayer(), currentPlayer);
         Assert.assertNotNull("Action is non-null.", action);
 
@@ -109,31 +109,31 @@ public final class Board implements Serializable {
         }
 
         // Check to see if someone has won.
-        Player winner = null;
-        Board tempBoard = new Board(newPieces, Utils.otherPlayer(currentPlayer), null, boardSize);
+        Winner winner = Winner.UNDETERMINED;
+        Board tempBoard = new Board(newPieces, Utils.otherPlayer(currentPlayer), winner, boardSize);
         if (tempBoard.kingInRefugeeSquare()) {
             // If the King is in a refugee square, the defenders win.
-            winner = Player.DEFENDER;
+            winner = Winner.DEFENDER;
         } else if (tempBoard.getPieces(Piece.KING).size() == 0){
             // If the King has been captured, then the attackers win.
-            winner = Player.ATTACKER;
+            winner = Winner.ATTACKER;
         } else {
             // If the next board would result in that player having no actions, then
             // the current player has won.
             if(tempBoard.getActions().size() == 0) {
-                winner = currentPlayer;
+                winner = Winner.fromPlayer(currentPlayer);
             }
         }
 
-        if(winner != null && eventHandler != null)
+        if(winner != Winner.UNDETERMINED && eventHandler != null)
             eventHandler.setWinner(winner);
 
         return new Board(newPieces, Utils.otherPlayer(currentPlayer), winner, boardSize);
     }
     public Board step(Action action) { return step(action, null); }
 
-    public boolean isOver() { return winner != null; }
-    public Player getWinner() { return winner; }
+    public boolean isOver() { return winner != Winner.UNDETERMINED; }
+    public Winner getWinner() { return winner; }
 
     public static boolean isCaptured(PMap<Position, Piece> pieces, Position defendingPos, Position attackingPos) {
         final Piece piece = pieces.get(defendingPos);
@@ -174,7 +174,7 @@ public final class Board implements Serializable {
     public Set<Action> getActions(Position position) {
         Assert.assertTrue(pieces.containsKey(position));
         Set<Action> actions = new HashSet<>();
-        if(winner != null) return actions;
+        if(winner != Winner.UNDETERMINED) return actions;
 
         Piece piece = pieces.get(position);
 
@@ -198,7 +198,7 @@ public final class Board implements Serializable {
     /** Get all of the actions that the given player can take. */
     public Set<Action> getActions(Player player) {
         Set<Action> actions = new HashSet<>();
-        if(winner != null) return actions;
+        if(winner != Winner.UNDETERMINED) return actions;
 
         for(Map.Entry<Position, Piece> piece : pieces.entrySet()) {
             if (PlayerOwnsPiece(player, piece.getValue()))

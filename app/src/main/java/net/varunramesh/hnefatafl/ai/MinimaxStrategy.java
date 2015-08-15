@@ -10,6 +10,7 @@ import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
+import net.varunramesh.hnefatafl.simulator.Winner;
 
 import java.util.Map;
 import java.util.Set;
@@ -81,8 +82,11 @@ public class MinimaxStrategy implements AIStrategy {
         ++leaves; // Evaling a board means we have reached a leaf.
 
         // If the game already has a winner, then return -infinity or infinity
-        if(board.isOver())
-            return board.getWinner() == player ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+        if(board.isOver()) {
+            if(board.getWinner() == Winner.DRAW) return 0;
+            else return board.getWinner() == Winner.fromPlayer(player)
+                    ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+        }
 
         float score = 0.0f;
 
