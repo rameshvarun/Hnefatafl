@@ -15,6 +15,7 @@ import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.alertdialogpro.AlertDialogPro;
 import com.annimon.stream.Optional;
@@ -22,6 +23,7 @@ import com.annimon.stream.Stream;
 import com.annimon.stream.function.Consumer;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
+import com.gc.materialdesign.widgets.SnackBar;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -289,6 +291,8 @@ public class MainActivity extends BaseGameActivity {
         final TurnBasedMatch match = updateMatchResult.getMatch();
         if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
             startActivity(PlayerActivity.createIntent(this, match));
+        } else {
+            Toast.makeText(this, "Invitation Sent.", Toast.LENGTH_SHORT).show();
         }
     }
 }

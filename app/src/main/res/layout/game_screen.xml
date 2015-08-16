@@ -43,7 +43,13 @@
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:id="@+id/attacker_card"
+                android:background="@color/current_player">
 
                 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     android:layout_width="wrap_content"
@@ -79,13 +85,18 @@
                 android:id="@+id/textView2"
                 android:textColor="@android:color/black"
                 android:gravity="center_vertical"
-                android:layout_marginRight="10dp"
-                android:layout_marginLeft="10dp" />
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp" />
 
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:id="@+id/defender_card">
 
                 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     android:layout_width="wrap_content"

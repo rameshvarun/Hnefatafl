@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.annimon.stream.Optional;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
@@ -25,6 +26,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.wearable.Asset;
 
 import junit.framework.Assert;
@@ -47,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +65,9 @@ import java.util.concurrent.RunnableFuture;
 public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private final String TAG = "HnefataflGame";
 
-    private final GameState state;
+    private GameState state;
     private final Handler uiHandler;
+    private Optional<TurnBasedMatch> match;
 
     private BoardActor boardActor;
     private Stage stage;
@@ -77,15 +81,15 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         return textures.get(textureFile);
     }
 
-    private final Queue<Integer> messageQueue;
+    private final Queue<Integer> messageQueue = new ConcurrentLinkedQueue<Integer>();
     public void postMessage(int message) {
         messageQueue.add(new Integer(message));
     }
 
-    public HnefataflGame(GameState state, Handler uiHandler) {
+    public HnefataflGame(GameState state, Handler uiHandler, Optional<TurnBasedMatch> match) {
         this.state = state;
         this.uiHandler = uiHandler;
-        messageQueue = new ConcurrentLinkedQueue<Integer>();
+        this.match = match;
     }
 
     public void TakeAIMove() {
@@ -162,6 +166,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         SELECT_MOVE,
         CONFIRM_MOVE,
         AI_MOVE,
+        WAITING_FOR_ONLINE_PLAYER,
         WINNER_DETERMINED
     }
     private MoveState moveState;
@@ -174,18 +179,34 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         stage = new Stage(new ScreenViewport(cam));
         Gdx.input.setInputProcessor(stage);
 
-        // Create game board.
+        // Create game board actor.
         boardActor = new BoardActor(this);
         stage.addActor(boardActor);
 
         // If this is the first move, then simply display the board.
         if(state.isFirstMove()) {
             setBoardConfiguration(state.currentBoard());
+            initializeState();
         } else {
-            // Otherwise, replay the last move.
-            throw new UnsupportedOperationException();
+            // Get the current and the previous board.
+            Deque<Board> boards = state.getBoards();
+            final Board currentBoard = boards.pop();
+            final Board lastBoard = boards.peek();
+            boards.push(currentBoard);
+
+            final Action lastAction = state.getActions().peek();
+
+            setBoardConfiguration(lastBoard);
+
+            Utils.schedule(() -> {
+                lastBoard.step(lastAction, this);
+                Utils.schedule(() -> {
+                    initializeState();
+                }, 1.0f);
+            }, 1.0f);
         }
 
+        // Center camera on board.
         cam.position.set(boardActor.getWidth() / 2, boardActor.getHeight() / 2, cam.position.z);
 
         /** Pinch-zoom functionality **/
@@ -212,21 +233,61 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 return false;
             }
         };
+    }
 
+    public void updateMatch(TurnBasedMatch match, GameState gameState) {
+        if (moveState == MoveState.WAITING_FOR_ONLINE_PLAYER) {
+            this.match = Optional.of(match);
+            this.state = gameState;
 
+            if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
+                // Get the current and the previous board.
+                Deque<Board> boards = state.getBoards();
+                final Board currentBoard = boards.pop();
+                final Board lastBoard = boards.peek();
+                boards.push(currentBoard);
+
+                final Action lastAction = state.getActions().peek();
+
+                setBoardConfiguration(lastBoard);
+                lastBoard.step(lastAction, this);
+                Utils.schedule(() -> {
+                    updateCurrentPlayer();
+                    moveState = MoveState.SELECT_MOVE;
+                }, 1.0f);
+            } else {
+                moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
+            }
+        }
+    }
+
+    public void initializeState() {
         if (state.getType() instanceof GameType.PassAndPlay) {
+            // For a pass and play game, go directly to the select move state.
             moveState = MoveState.SELECT_MOVE;
         } else if (state.getType() instanceof GameType.PlayerVsAI) {
             GameType.PlayerVsAI pvaState = (GameType.PlayerVsAI) state.getType();
 
             Log.d(TAG, state.currentBoard().getCurrentPlayer().toString());
             Log.d(TAG, pvaState.getHumanPlayer().toString());
+
+            // For a player vs. AI game, go to select move state if the current player is the human player.
             if(state.currentBoard().getCurrentPlayer().equals(pvaState.getHumanPlayer())) {
                 moveState = MoveState.SELECT_MOVE;
             } else {
                 moveState = MoveState.AI_MOVE;
                 TakeAIMove();
             }
+        } else if (state.getType() instanceof GameType.OnlineMatch) {
+            Assert.assertTrue("Match is present.", match.isPresent());
+
+            if(match.get().getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
+                moveState = MoveState.SELECT_MOVE;
+            } else {
+                moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
+            }
+        } else {
+            throw new UnsupportedOperationException("Unknown GameType.");
         }
     }
 
@@ -241,53 +302,66 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     public void stageAction(Action action) {
         // We can only stage an action from the SELECT_MOVE state.
-        assert getMoveState() == MoveState.SELECT_MOVE;
+        if(moveState == MoveState.SELECT_MOVE) {
+            // Destroy all move selecters.
+            clearMoveSelectors();
 
-        // Destroy all move selecters.
-        clearMoveSelectors();
+            // Step forward the state, enacting events.
+            stagedAction = action;
+            stagedBoard = state.currentBoard().step(stagedAction, this);
 
-        // Step forward the state, enacting events.
-        stagedAction = action;
-        stagedBoard = state.currentBoard().step(stagedAction, this);
-
-        if(stagedBoard.isOver()) {
-            moveState = MoveState.WINNER_DETERMINED;
-            showWinner();
-        } else {
-            // Transition into the CONFIRM_MOVE state
-            moveState = MoveState.CONFIRM_MOVE;
-            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+            if (stagedBoard.isOver()) {
+                moveState = MoveState.WINNER_DETERMINED;
+                showWinner();
+            } else {
+                // Transition into the CONFIRM_MOVE state
+                moveState = MoveState.CONFIRM_MOVE;
+                uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
+            }
         }
     }
 
     /** Call when in CONFIRM_MOVE state to revert the move */
     private void cancelMove() {
         // In order to cancel a move, we must already have staged a move.
-        assert moveState == MoveState.CONFIRM_MOVE;
+        if(moveState == MoveState.CONFIRM_MOVE) {
+            // Set board back to original state.
+            setBoardConfiguration(state.currentBoard());
 
-        // Set board back to original state.
-        setBoardConfiguration(state.currentBoard());
-
-        // Transition back to the SELECT_MOVE state.
-        moveState = MoveState.SELECT_MOVE;
-        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
+            // Transition back to the SELECT_MOVE state.
+            moveState = MoveState.SELECT_MOVE;
+            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
+        }
     }
 
     private void confirmMove() {
         // In order to confirm a move, we must already have staged a move.
-        assert moveState == MoveState.CONFIRM_MOVE;
+        if(moveState == MoveState.CONFIRM_MOVE) {
+            state.pushBoard(stagedAction, stagedBoard);
 
-        state.pushBoard(stagedAction, stagedBoard);
+            if (state.getType() instanceof GameType.PassAndPlay) {
+                // Transition back to the SELECT_MOVE state.
+                moveState = MoveState.SELECT_MOVE;
+            } else if (state.getType() instanceof GameType.PlayerVsAI) {
+                moveState = MoveState.AI_MOVE;
+                TakeAIMove();
+            } else if (state.getType() instanceof GameType.OnlineMatch) {
+                moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
+            } else {
+                throw new UnsupportedOperationException("Unkown Game Type.");
+            }
 
-        if (state.getType() instanceof GameType.PassAndPlay) {
-            // Transition back to the SELECT_MOVE state.
-            moveState = MoveState.SELECT_MOVE;
-        } else if (state.getType() instanceof GameType.PlayerVsAI) {
-            moveState = MoveState.AI_MOVE;
-            TakeAIMove();
+            // Hide the confirmation UI.
+            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
+
+            // Update the current player.
+            updateCurrentPlayer();
         }
+    }
 
-        uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
+    private void updateCurrentPlayer() {
+        uiHandler.sendMessage(uiHandler.obtainMessage(PlayerActivity.MESSAGE_UPDATE_CURRENT_PLAYER,
+                state.currentBoard().getCurrentPlayer()));
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
