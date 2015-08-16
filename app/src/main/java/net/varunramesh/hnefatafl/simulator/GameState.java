@@ -2,6 +2,7 @@ package net.varunramesh.hnefatafl.simulator;
 
 import com.annimon.stream.function.Consumer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Date;

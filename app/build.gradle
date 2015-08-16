@@ -82,10 +82,8 @@ dependencies {
 
     // Stream APIs Backported From Java 8
     compile 'com.annimon:stream:1.0.2'
-
-    // Apache Commons IO
-    compile 'commons-io:commons-io:2.4'
-
+    // Apache Commons
+    compile 'org.apache.commons:commons-lang3:3.4'
     // Realm.io
     compile 'io.realm:realm-android:0.82.1'
 }
