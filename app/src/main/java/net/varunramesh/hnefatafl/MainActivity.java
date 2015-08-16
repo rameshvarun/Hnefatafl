@@ -186,11 +186,23 @@ public class MainActivity extends BaseGameActivity {
         Log.e(TAG, "Sign in has failed.");
     }
 
+    /**
+     * Store whether or not the user has been redirected to a game from this activity. This is to
+     * prevent the following situation.
+     * 1. The player launches this activity from a notification.
+     * 2. We redirect the game screen.
+     * 3. The user hits back to come back to this activity.
+     * 4. Since the intent data has not changed, we immediately send them back to the game screen.
+     */
+    private boolean redirectedToGame = false;
+
     @Override
     public void onSignInSucceeded() {
         Log.d(TAG, "Sign in has succeed.");
 
-        if (mHelper.getTurnBasedMatch() != null) {
+        // If this activity was launched from a notification then take them directly to the game.
+        if (mHelper.getTurnBasedMatch() != null && !redirectedToGame) {
+            redirectedToGame = true;
             startActivity(PlayerActivity.createIntent(this, mHelper.getTurnBasedMatch()));
             return;
         }
@@ -282,6 +294,7 @@ public class MainActivity extends BaseGameActivity {
         }
     }
 
+    /** Open up the player's game inbox */
     public void openInbox() {
         Intent intent = Games.TurnBasedMultiplayer.getInboxIntent(getApiClient());
         startActivityForResult(intent, RC_VIEW_INBOX);
@@ -292,7 +305,7 @@ public class MainActivity extends BaseGameActivity {
         if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
             startActivity(PlayerActivity.createIntent(this, match));
         } else {
-            Toast.makeText(this, "Invitation Sent.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Invitation Sent", Toast.LENGTH_SHORT).show();
         }
     }
 }
