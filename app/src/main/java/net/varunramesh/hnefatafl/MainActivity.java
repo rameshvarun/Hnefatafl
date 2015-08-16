@@ -187,6 +187,11 @@ public class MainActivity extends BaseGameActivity {
     @Override
     public void onSignInSucceeded() {
         Log.d(TAG, "Sign in has succeed.");
+
+        if (mHelper.getTurnBasedMatch() != null) {
+            startActivity(PlayerActivity.createIntent(this, mHelper.getTurnBasedMatch()));
+            return;
+        }
     }
 
     @Override
