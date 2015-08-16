@@ -11,5 +11,5 @@ public interface EventHandler {
     /** Remove a piece that has been captured */
     void removePiece(Position position);
     /** The game has just been won by the provided player */
-    void setWinner(Player player);
+    void setWinner(Winner player);
 }

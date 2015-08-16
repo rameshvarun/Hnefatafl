@@ -33,5 +33,16 @@ One note about actions is that we can reconstruct a game state simply by taking 
 ## Position
 Simple Immutable class that holds a board position (x and y coordinates).
 
-## Direction
-Simple enum for UP, DOWN, LEFT, and RIGHT. Use Utils.oppositeDirection to flip a direction.
+## Enums
+
+### Direction
+Simple enum for `UP`, `DOWN`, `LEFT`, and `RIGHT`. Use Utils.oppositeDirection to flip a direction.
+
+### Piece
+Represents `ATTACKER`, `DEFENDER`, and `KING` piece types.
+
+### Player
+Represents either the `ATTACKER` or `DEFENDER` player.
+
+### Winner
+Represents the current winner of a game. `UNDETERMINED` means that the game is still in progress. `ATTACKER` and `DEFENDER` represent that that player has won the game. `DRAW` represents a drawn / tie game.

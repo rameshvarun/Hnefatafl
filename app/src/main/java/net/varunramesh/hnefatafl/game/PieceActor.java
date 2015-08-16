@@ -41,7 +41,7 @@ public class PieceActor extends Actor implements LayerActor {
         return x >= 0 && x < getWidth() && y >= 0 && y < getWidth() ? this : null;
     }
 
-    public PieceActor(HnefataflGame game, Piece.Type type, Position boardPos){
+    public PieceActor(HnefataflGame game, Piece type, Position boardPos){
         this.game = game;
 
         switch(type) {
