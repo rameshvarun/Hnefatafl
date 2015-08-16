@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl.game;
 
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -39,6 +40,7 @@ import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
+import net.varunramesh.hnefatafl.simulator.Winner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,15 +127,10 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         }, 1.0f);
     }
 
+    /** Show Winner Dialog **/
     public void showWinner() {
-        // Show Winner Dialog
-        if(state.getType() instanceof GameType.PlayerVsAI){
-            GameType.PlayerVsAI pvai = (GameType.PlayerVsAI) state.getType();
-            if(pvai.getHumanPlayer() == winner) uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_PLAYER_WIN);
-            else uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_PLAYER_LOSS);
-        }else{
-            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_WINNER);
-        }
+        Assert.assertTrue("The winner has been determined", winner != Winner.UNDETERMINED);
+        uiHandler.sendMessage(uiHandler.obtainMessage(PlayerActivity.MESSAGE_SHOW_WINNER, winner));
     }
 
     @Override
@@ -153,12 +150,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         actor.capture();
     }
 
-    private Player winner;
+    private Winner winner = Winner.UNDETERMINED;
 
     @Override
-    public void setWinner(Player player) {
-        Log.d(TAG, player + " won the game.");
-        winner = player;
+    public void setWinner(Winner winner) {
+        Log.d(TAG, winner + " won the game.");
+        this.winner = winner;
     }
 
     public static enum MoveState {
@@ -354,7 +351,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
         // Add in the new actors.
         for(Map.Entry<Position, Piece> piece : board.getPieces()) {
-            PieceActor actor = new PieceActor(this, piece.getValue().getType(), piece.getKey());
+            PieceActor actor = new PieceActor(this, piece.getValue(), piece.getKey());
             stage.addActor(actor);
             pieceActors.add(actor);
         }
