@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Telephony;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.View;
@@ -23,11 +24,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.alertdialogpro.AlertDialogPro;
+import com.annimon.stream.Optional;
+import com.annimon.stream.Stream;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.gc.materialdesign.widgets.Dialog;
 import com.gc.materialdesign.widgets.SnackBar;
+import com.google.android.gms.common.images.ImageManager;
+import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 
 import junit.framework.Assert;
@@ -41,11 +46,13 @@ import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Winner;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.w3c.dom.Text;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 
 import io.realm.Realm;
 
@@ -55,19 +62,22 @@ import io.realm.Realm;
 public class PlayerActivity extends AndroidApplication {
     private static final String TAG = "PlayerActivity";
 
+    private static final String EXTRAS_GAMESTATE = "GameState";
+    private static final String EXTRAS_MATCH = "TurnBasedMatch";
+
     /** Create an intent that will launch the Player for a given online match. */
     public static Intent createIntent(Context context, TurnBasedMatch match) {
         Intent intent = new Intent(context, PlayerActivity.class);
         GameState gameState = SerializationUtils.deserialize(match.getData());
-        intent.putExtra("GameState", gameState);
-        intent.putExtra("TurnBasedMatch", match);
+        intent.putExtra(EXTRAS_GAMESTATE, gameState);
+        intent.putExtra(EXTRAS_MATCH, match);
         return intent;
     }
 
     /** Create an intent that will launch the Player for a local game (AI or Pass & Play) */
     public static Intent createIntent(Context context, GameState gameState) {
         Intent intent = new Intent(context, PlayerActivity.class);
-        intent.putExtra("GameState", gameState);
+        intent.putExtra(EXTRAS_GAMESTATE, gameState);
         return intent;
     }
 
@@ -203,7 +213,7 @@ public class PlayerActivity extends AndroidApplication {
         frameLayout.addView(gameView, 0);
 
         // Install Norse font
-        TextView currentPlayer = (TextView) findViewById(R.id.currentPlayer);
+        final TextView currentPlayer = (TextView) findViewById(R.id.currentPlayer);
         Typeface tf = Typeface.createFromAsset(getAssets(), "Norse-Bold.otf");
         currentPlayer.setTypeface(tf);
 
@@ -216,6 +226,44 @@ public class PlayerActivity extends AndroidApplication {
         ok_button.setOnClickListener((View v) -> {
             game.postMessage(HnefataflGame.MESSAGE_CONFIRM_MOVE);
         });
+
+        // Load Match object
+        final ImageManager imageManager = ImageManager.create(this);
+
+        final LinearLayout online_match_view = (LinearLayout)findViewById(R.id.online_match_view);
+
+        if (extras.containsKey(EXTRAS_MATCH)) {
+            currentPlayer.setVisibility(View.GONE);
+
+            GameType.OnlineMatch gameType = (GameType.OnlineMatch)gameState.getType();
+
+            TurnBasedMatch match = extras.getParcelable(EXTRAS_MATCH);
+            Optional<Participant> attacker = Stream.of(match.getParticipants())
+                    .filter((Participant p) -> p.getParticipantId().equals(gameType.getAttackerParticipantId()))
+                    .findFirst();
+
+            Optional<Participant> defender = Stream.of(match.getParticipants())
+                    .filter((Participant p) -> p.getParticipantId().equals(gameType.getDefenderParticipantId()))
+                    .findFirst();
+
+            if (attacker.isPresent()) {
+                TextView attackername = (TextView)findViewById(R.id.attackername);
+                attackername.setText(attacker.get().getDisplayName());
+
+                ImageView attackericon = (ImageView)findViewById(R.id.attackericon);
+                imageManager.loadImage(attackericon, attacker.get().getIconImageUri());
+            }
+
+            if (defender.isPresent()) {
+                TextView defendername = (TextView)findViewById(R.id.defendername);
+                defendername.setText(defender.get().getDisplayName());
+
+                ImageView defendericon = (ImageView)findViewById(R.id.defendericon);
+                imageManager.loadImage(defendericon, defender.get().getIconImageUri());
+            }
+        } else {
+            online_match_view.setVisibility(View.GONE);
+        }
 
         hideMoveConfirmation();
     }
