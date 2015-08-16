@@ -133,9 +133,7 @@ public class MainActivity extends BaseGameActivity {
                 switch (item) {
                     case R.id.action_pass_and_play: {
                         GameState gameState = new GameState(new GameType.PassAndPlay());
-                        Intent intent = new Intent(this, PlayerActivity.class);
-                        intent.putExtra("GameState", gameState);
-                        startActivity(intent);
+                        startActivity(PlayerActivity.createIntent(this, gameState));
                         break;
                     }
                     case R.id.action_online_match: {
@@ -150,9 +148,7 @@ public class MainActivity extends BaseGameActivity {
                     case R.id.action_player_vs_ai: {
                         showSidePickDialog((Player player) -> {
                             GameState gameState = new GameState(new GameType.PlayerVsAI(player));
-                            Intent intent = new Intent(this, PlayerActivity.class);
-                            intent.putExtra("GameState", gameState);
-                            startActivity(intent);
+                            startActivity(PlayerActivity.createIntent(this, gameState));
                         });
                         break;
                     }
@@ -228,6 +224,18 @@ public class MainActivity extends BaseGameActivity {
                         .setResultCallback((TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) -> {
                             onInitiateMatchResult(initiateMatchResult);
                         });
+
+                break;
+            }
+            case RC_VIEW_INBOX: {
+                // user canceled
+                if (response != Activity.RESULT_OK) return;
+
+                TurnBasedMatch match = intent.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
+                Assert.assertNotNull("A match is returned from the inbox view.", match);
+                startActivity(PlayerActivity.createIntent(this, match));
+
+                break;
             }
         }
     }
@@ -275,11 +283,7 @@ public class MainActivity extends BaseGameActivity {
     public void onUpdateMatchResult(TurnBasedMultiplayer.UpdateMatchResult updateMatchResult) {
         final TurnBasedMatch match = updateMatchResult.getMatch();
         if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
-            Intent intent = new Intent(this, PlayerActivity.class);
-
-            GameState gameState = SerializationUtils.deserialize(match.getData());
-            intent.putExtra("GameState", gameState);
-            startActivity(intent);
+            startActivity(PlayerActivity.createIntent(this, match));
         }
     }
 }

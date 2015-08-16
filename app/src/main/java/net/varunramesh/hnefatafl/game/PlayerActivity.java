@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl.game;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.gc.materialdesign.widgets.Dialog;
 import com.gc.materialdesign.widgets.SnackBar;
+import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 
 import junit.framework.Assert;
 
@@ -37,6 +39,8 @@ import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Winner;
+
+import org.apache.commons.lang3.SerializationUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,6 +54,22 @@ import io.realm.Realm;
  */
 public class PlayerActivity extends AndroidApplication {
     private static final String TAG = "PlayerActivity";
+
+    /** Create an intent that will launch the Player for a given online match. */
+    public static Intent createIntent(Context context, TurnBasedMatch match) {
+        Intent intent = new Intent(context, PlayerActivity.class);
+        GameState gameState = SerializationUtils.deserialize(match.getData());
+        intent.putExtra("GameState", gameState);
+        intent.putExtra("TurnBasedMatch", match);
+        return intent;
+    }
+
+    /** Create an intent that will launch the Player for a local game (AI or Pass & Play) */
+    public static Intent createIntent(Context context, GameState gameState) {
+        Intent intent = new Intent(context, PlayerActivity.class);
+        intent.putExtra("GameState", gameState);
+        return intent;
+    }
 
     private Animation bottomUp;
     public void showMoveConfirmButtons() {
