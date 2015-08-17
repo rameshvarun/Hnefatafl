@@ -174,7 +174,7 @@ public class PlayerActivity extends AndroidApplication {
         });
 
         // Create the game view.
-        final HnefataflGame game = new HnefataflGame(gameState, handler);
+        final HnefataflGame game = new HnefataflGame(getApplicationContext(), gameState, handler);
         View gameView = initializeForView(game, config);
 
         // Add the game view to the framelayout

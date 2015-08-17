@@ -1,5 +1,8 @@
 package net.varunramesh.hnefatafl.game;
 
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -29,6 +32,7 @@ import com.google.android.gms.wearable.Asset;
 
 import junit.framework.Assert;
 
+import net.varunramesh.hnefatafl.R;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
@@ -64,11 +68,14 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     private final GameState state;
     private final Handler uiHandler;
+    private final Context context;
 
     private BoardActor boardActor;
     private Stage stage;
     private OrthographicCamera cam;
     private GestureAdapter controller;
+
+    private HashMap<String, MediaPlayer> sounds;
 
     private final HashMap<String, Texture> textures = new HashMap<>();
     public synchronized Texture getTexture(String textureFile) {
@@ -82,10 +89,17 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         messageQueue.add(new Integer(message));
     }
 
-    public HnefataflGame(GameState state, Handler uiHandler) {
+    public HnefataflGame(Context context, GameState state, Handler uiHandler) {
         this.state = state;
         this.uiHandler = uiHandler;
         messageQueue = new ConcurrentLinkedQueue<Integer>();
+        this.context = context;
+
+        /** Sound effects **/
+        sounds = new HashMap<>();
+        sounds.put("capture", MediaPlayer.create(context, R.raw.swish));
+        sounds.get("capture").setVolume((float) 0.5, (float) 0.5);
+
     }
 
     public void TakeAIMove() {
@@ -148,6 +162,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         assert actor != null;
         pieceActors.remove(actor);
         actor.capture();
+
+        sounds.get("capture").start();
     }
 
     private Winner winner = Winner.UNDETERMINED;
