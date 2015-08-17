@@ -252,8 +252,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 setBoardConfiguration(lastBoard);
                 lastBoard.step(lastAction, this);
                 Utils.schedule(() -> {
-                    updateCurrentPlayer();
-                    moveState = MoveState.SELECT_MOVE;
+                    if(currentBoard.isOver()) {
+                        showWinner();
+                    } else {
+                        updateCurrentPlayer();
+                        moveState = MoveState.SELECT_MOVE;
+                    }
                 }, 1.0f);
             } else {
                 moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
@@ -310,14 +314,9 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             stagedAction = action;
             stagedBoard = state.currentBoard().step(stagedAction, this);
 
-            if (stagedBoard.isOver()) {
-                moveState = MoveState.WINNER_DETERMINED;
-                showWinner();
-            } else {
-                // Transition into the CONFIRM_MOVE state
-                moveState = MoveState.CONFIRM_MOVE;
-                uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
-            }
+            // Ask for move confirmation.
+            moveState = MoveState.CONFIRM_MOVE;
+            uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
         }
     }
 
@@ -339,23 +338,27 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         if(moveState == MoveState.CONFIRM_MOVE) {
             state.pushBoard(stagedAction, stagedBoard);
 
-            if (state.getType() instanceof GameType.PassAndPlay) {
-                // Transition back to the SELECT_MOVE state.
-                moveState = MoveState.SELECT_MOVE;
-            } else if (state.getType() instanceof GameType.PlayerVsAI) {
-                moveState = MoveState.AI_MOVE;
-                TakeAIMove();
-            } else if (state.getType() instanceof GameType.OnlineMatch) {
-                moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
-            } else {
-                throw new UnsupportedOperationException("Unkown Game Type.");
-            }
-
             // Hide the confirmation UI.
             uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
 
-            // Update the current player.
-            updateCurrentPlayer();
+            if (!state.currentBoard().isOver()) {
+                if (state.getType() instanceof GameType.PassAndPlay) {
+                    // Transition back to the SELECT_MOVE state.
+                    moveState = MoveState.SELECT_MOVE;
+                } else if (state.getType() instanceof GameType.PlayerVsAI) {
+                    moveState = MoveState.AI_MOVE;
+                    TakeAIMove();
+                } else if (state.getType() instanceof GameType.OnlineMatch) {
+                    moveState = MoveState.WAITING_FOR_ONLINE_PLAYER;
+                } else {
+                    throw new UnsupportedOperationException("Unkown Game Type.");
+                }
+
+                // Update the current player.
+                updateCurrentPlayer();
+            } else {
+                showWinner();
+            }
         }
     }
 

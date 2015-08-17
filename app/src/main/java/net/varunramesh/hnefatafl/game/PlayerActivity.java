@@ -137,6 +137,10 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
                 GameType.PlayerVsAI pvai = (GameType.PlayerVsAI) gameState.getType();
                 if(pvai.getHumanPlayer() == winner.toPlayer()) title = "You Have Won the Game!";
                 else title = "You Have Lost the Game :(";
+            } else if (gameState.getType() instanceof GameType.OnlineMatch) {
+                title = "The game has ended.";
+            } else {
+                throw new UnsupportedOperationException("Unkown GameType: " + gameState.getType().getClass().getName());
             }
         }
 
@@ -346,7 +350,7 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
     public void onSignInSucceeded() {
         Log.d(TAG, "Sign in has succeed.");
 
-        // Subscribe to updates in an online match
+        // Subscribe to updates in an online match.
         if(match.isPresent() && gameHelper.isPresent() && gameHelper.get().isSignedIn()) {
             Assert.assertTrue("Game Helper is present.", gameHelper.isPresent());
             Games.TurnBasedMultiplayer.registerMatchUpdateListener(gameHelper.get().getApiClient(), this);
