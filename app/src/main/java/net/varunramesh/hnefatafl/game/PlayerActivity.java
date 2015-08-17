@@ -131,16 +131,27 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
         if (winner == Winner.DRAW) title = "Tie Game!";
         else {
             if(gameState.getType() instanceof GameType.PassAndPlay) {
-                if(winner == Winner.ATTACKER) title = "The attackers win!";
+                if (winner == Winner.ATTACKER) title = "The attackers win!";
                 else title = "The defenders win!";
             } else if(gameState.getType() instanceof GameType.PlayerVsAI) {
                 GameType.PlayerVsAI pvai = (GameType.PlayerVsAI) gameState.getType();
-                if(pvai.getHumanPlayer() == winner.toPlayer()) title = "You Have Won the Game!";
+                if (pvai.getHumanPlayer() == winner.toPlayer()) title = "You Have Won the Game!";
                 else title = "You Have Lost the Game :(";
             } else if (gameState.getType() instanceof GameType.OnlineMatch) {
-                title = "The game has ended.";
+                GameType.OnlineMatch gameType = (GameType.OnlineMatch) gameState.getType();
+
+                String myPlayerId = Games.Players.getCurrentPlayerId(gameHelper.get().getApiClient());
+                String myParticipantId = match.get().getParticipantId(myPlayerId);
+
+                boolean won = (winner.toPlayer() == Player.ATTACKER &&
+                                myParticipantId.equals(gameType.getAttackerParticipantId()))
+                        || (winner.toPlayer() == Player.DEFENDER &&
+                                myParticipantId.equals(gameType.getDefenderParticipantId()));
+
+                if (won) title = "You Have Won the Game!";
+                else title = "You Have Lost the Game!";
             } else {
-                throw new UnsupportedOperationException("Unkown GameType: " + gameState.getType().getClass().getName());
+                throw new UnsupportedOperationException("Unknown GameType: " + gameState.getType().getClass().getName());
             }
         }
 
