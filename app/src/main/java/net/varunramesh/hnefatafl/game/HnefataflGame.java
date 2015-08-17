@@ -123,6 +123,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                     // Let the player move again, in the SELECT_MOVE state
                     moveState = MoveState.SELECT_MOVE;
                 }
+                updateCurrentPlayer();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
@@ -174,7 +175,6 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     @Override
     public void create () {
-
         cam = new OrthographicCamera();
         stage = new Stage(new ScreenViewport(cam));
         Gdx.input.setInputProcessor(stage);

@@ -125,14 +125,30 @@
             </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Attacker&apos;s Turn"
-            android:id="@+id/currentPlayer"
-            android:textColor="@android:color/black"
-            android:textSize="35dp" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal">
+
+            <com.gc.materialdesign.views.ProgressBarCircularIndeterminate
+                android:id="@+id/ailoading"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="#1E88E5"
+                android:layout_marginRight="5dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Attacker&apos;s Turn"
+                android:id="@+id/currentPlayer"
+                android:textColor="@android:color/black"
+                android:textSize="35dp"
+                android:gravity="center_vertical" />
+        </LinearLayout>
+
     </LinearLayout>
 
 </FrameLayout>

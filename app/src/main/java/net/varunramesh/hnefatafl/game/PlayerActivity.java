@@ -21,6 +21,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,12 +31,14 @@ import com.annimon.stream.Stream;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
+import com.gc.materialdesign.views.ProgressBarCircularIndeterminate;
 import com.gc.materialdesign.widgets.Dialog;
 import com.gc.materialdesign.widgets.SnackBar;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.images.ImageManager;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Participant;
+import com.google.android.gms.games.multiplayer.ParticipantResult;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
@@ -149,35 +152,6 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
     public static final int MESSAGE_UPDATE_CURRENT_PLAYER = 3;
     public static final int MESSAGE_SHOW_WINNER = 4;
 
-
-    private static class OnlinePersister implements Persister {
-        private final Context context;
-        private final String matchId;
-        private final GameHelper gameHelper;
-
-        public OnlinePersister(Context context, String matchId, GameHelper gameHelper) {
-            this.context = context;
-            this.matchId = matchId;
-            this.gameHelper = gameHelper;
-        }
-
-        @Override
-        public void persist(GameState state) {
-            Assert.assertNotNull("The GameHelper should be present.", gameHelper);
-
-            GameType.OnlineMatch gameType = (GameType.OnlineMatch) state.getType();
-
-            String nextParticipant = (state.currentBoard().getCurrentPlayer() == Player.ATTACKER) ?
-                    gameType.getAttackerParticipantId() : gameType.getDefenderParticipantId();
-
-            Games.TurnBasedMultiplayer.takeTurn(gameHelper.getApiClient(),
-                    matchId, SerializationUtils.serialize(state),
-                    nextParticipant).setResultCallback((TurnBasedMultiplayer.UpdateMatchResult updateMatchResult) -> {
-                Toast.makeText(context, "Turn Sent", Toast.LENGTH_SHORT).show();
-            });
-        }
-    }
-
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,7 +174,7 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
         match = Optional.ofNullable(extras.getParcelable(EXTRAS_MATCH));
 
         // Create a handler for recieving messages from other threads.
-        handler = new Handler() {
+        handler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 switch(msg.what) {
@@ -340,13 +314,24 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
         if(player == Player.ATTACKER) {
             attackercard.setBackgroundColor(getResources().getColor(R.color.current_player));
             defendercard.setBackgroundColor(getResources().getColor(R.color.transparent));
-
             currentPlayer.setText("Attacker's Turn");
         } else {
             attackercard.setBackgroundColor(getResources().getColor(R.color.transparent));
             defendercard.setBackgroundColor(getResources().getColor(R.color.current_player));
-
             currentPlayer.setText("Defender's Turn");
+        }
+
+        final ProgressBarCircularIndeterminate ailoading =
+                (ProgressBarCircularIndeterminate)findViewById(R.id.ailoading);
+        if(gameState.getType() instanceof GameType.PlayerVsAI) {
+            GameType.PlayerVsAI gameType = (GameType.PlayerVsAI) gameState.getType();
+            if (gameType.getAIPlayer().equals(player)) {
+                ailoading.setVisibility(View.VISIBLE);
+            } else {
+                ailoading.setVisibility(View.GONE);
+            }
+        } else {
+            ailoading.setVisibility(View.GONE);
         }
     }
 
