@@ -14,7 +14,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Overview
-Hnefatafl is a family of 2-player Viking board games, where one player tries to guide a King to a refugee square, while attackers try to prevent this. Right now, we're implementing the popular 11x11 variant - Feltar Hnefatafl.
+Hnefatafl is a family of 2-player Viking board games, where one player tries to guide a King to a refugee square, while attackers try to prevent this. Right now, we're implementing the popular 11x11 variant - Feltar Hnefatafl. To learn more about Hnefatafl + it's history, check out this video - https://www.youtube.com/watch?v=gND2P1sHM3U.
 
 ## Programming Patterns
 ### Retrolambda
