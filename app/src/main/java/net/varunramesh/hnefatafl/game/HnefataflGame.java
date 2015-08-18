@@ -2,40 +2,25 @@ package net.varunramesh.hnefatafl.game;
 
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureAdapter;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.google.android.gms.wearable.Asset;
 
 import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.R;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
-import net.varunramesh.hnefatafl.ai.RandomStrategy;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
@@ -47,10 +32,6 @@ import net.varunramesh.hnefatafl.simulator.Position;
 import net.varunramesh.hnefatafl.simulator.Winner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +39,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
 
 /**
  * Created by Varun on 7/23/2015.
@@ -99,6 +79,11 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         sounds = new HashMap<>();
         sounds.put("capture", MediaPlayer.create(context, R.raw.swish));
         sounds.get("capture").setVolume((float) 0.5, (float) 0.5);
+
+        sounds.put("move", MediaPlayer.create(context, R.raw.moveclick));
+        sounds.get("move").setVolume((float) 1.0, (float) 1.0);
+        sounds.put("put", MediaPlayer.create(context, R.raw.setdownclick));
+        sounds.get("put").setVolume((float) 1.0, (float) 1.0);
 
     }
 
@@ -274,6 +259,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             moveState = MoveState.CONFIRM_MOVE;
             uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_SHOW_CONFIRMATION);
         }
+
+        sounds.get("put").start();
     }
 
     /** Call when in CONFIRM_MOVE state to revert the move */
@@ -345,6 +332,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 moveSelectors.add(move);
                 stage.addActor(move);
             }
+
+            sounds.get("move").start();
         }
     }
 
