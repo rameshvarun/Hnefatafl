@@ -50,7 +50,7 @@ public class MinimaxStrategy implements AIStrategy {
     private final Ruleset ruleset;
 
     public MinimaxStrategy(Ruleset ruleset, Player player) {
-        this(ruleset, player, DEFAULT_SEARCH_DEPTH);
+        this(ruleset, player, ruleset.getAISearchDepth());
     }
 
     public MinimaxStrategy(Ruleset ruleset, Player player, int searchDepth) {

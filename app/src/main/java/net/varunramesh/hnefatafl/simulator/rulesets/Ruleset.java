@@ -30,4 +30,10 @@ public interface Ruleset {
      * @return The set of legal actions.
      */
     Set<Action> getActions(List<Board> history);
+
+    /**
+     * Get the recommended amount of Plys for the Minimax AI to search on this game type.
+     * @return The integer number of Plys that the AI should search for.
+     */
+    int getAISearchDepth();
 }

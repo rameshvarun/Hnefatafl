@@ -181,7 +181,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Gdx.input.setInputProcessor(stage);
 
         // Create game board actor.
-        boardActor = new BoardActor(this);
+        boardActor = new BoardActor(this, state.currentBoard().getBoardSize());
         stage.addActor(boardActor);
 
         // If this is the first move, then simply display the board.
@@ -452,7 +452,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     @Override
     public void render () {
         float aspect = (float)stage.getViewport().getScreenWidth() / stage.getViewport().getScreenHeight();
-        Vector2 idealSize = new Vector2(2048, 2048 + 100);
+        Vector2 idealSize = new Vector2(boardActor.getWidth() + 100, boardActor.getHeight() + 100);
         if(idealSize.x > idealSize.y*aspect)
             stage.getViewport().setWorldSize(idealSize.x, idealSize.x / aspect);
         else

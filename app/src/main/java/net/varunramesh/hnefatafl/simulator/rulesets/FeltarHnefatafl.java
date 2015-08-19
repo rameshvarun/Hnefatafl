@@ -118,7 +118,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
 
         // Check to see if someone has won.
         Winner winner = Winner.UNDETERMINED;
-        Board tempBoard = new Board(newPieces, currentBoard.getCurrentPlayer().other(), winner, BOARD_SIZE);
+        Board tempBoard = new Board(newPieces, currentBoard.getCurrentPlayer().other(), winner, currentBoard.getBoardSize());
         if (kingInRefugeeSquare(tempBoard)) {
             // If the King is in a refugee square, the defenders win.
             winner = Winner.DEFENDER;
@@ -136,12 +136,17 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         if(winner != Winner.UNDETERMINED && eventHandler != null)
             eventHandler.setWinner(winner);
 
-        return new Board(newPieces, currentBoard.getCurrentPlayer().other(), winner, BOARD_SIZE);
+        return new Board(newPieces, currentBoard.getCurrentPlayer().other(), winner, currentBoard.getBoardSize());
     }
 
     @Override
     public Set<Action> getActions(List<Board> history) {
        return getActions(history.get(history.size() - 1));
+    }
+
+    @Override
+    public int getAISearchDepth() {
+        return 2;
     }
 
     private Set<Action> getActions(Board currentBoard) {
