@@ -44,6 +44,7 @@ import net.varunramesh.hnefatafl.game.PlayerActivity;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
+import net.varunramesh.hnefatafl.simulator.rulesets.FeltarHnefatafl;
 
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -134,7 +135,7 @@ public class MainActivity extends BaseGameActivity {
             .listener((DialogInterface dialog, int item) -> {
                 switch (item) {
                     case R.id.action_pass_and_play: {
-                        GameState gameState = new GameState(new GameType.PassAndPlay());
+                        GameState gameState = new GameState(new GameType.PassAndPlay(), new FeltarHnefatafl());
                         startActivity(PlayerActivity.createIntent(this, gameState));
                         break;
                     }
@@ -149,7 +150,7 @@ public class MainActivity extends BaseGameActivity {
                     }
                     case R.id.action_player_vs_ai: {
                         showSidePickDialog((Player player) -> {
-                            GameState gameState = new GameState(new GameType.PlayerVsAI(player));
+                            GameState gameState = new GameState(new GameType.PlayerVsAI(player), new FeltarHnefatafl());
                             startActivity(PlayerActivity.createIntent(this, gameState));
                         });
                         break;
@@ -283,7 +284,8 @@ public class MainActivity extends BaseGameActivity {
                 String attackingParticipantId = (player == Player.ATTACKER) ? myParticipantId : otherParticipantId.get();
                 String defendingParticipantId = (player == Player.ATTACKER) ? otherParticipantId.get() : myParticipantId;
 
-                GameState gameState = new GameState(new GameType.OnlineMatch(attackingParticipantId, defendingParticipantId));
+                GameState gameState = new GameState(new GameType.OnlineMatch(attackingParticipantId, defendingParticipantId),
+                        new FeltarHnefatafl());
                 byte[] serialized = SerializationUtils.serialize(gameState);
 
                 Games.TurnBasedMultiplayer.takeTurn(getApiClient(), match.getMatchId(), serialized, attackingParticipantId)

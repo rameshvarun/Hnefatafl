@@ -96,11 +96,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Assert.assertEquals("We should be in the AI_MOVE state before taking an AI move.", moveState, MoveState.AI_MOVE);
 
         final Player aiPlayer = ((GameType.PlayerVsAI) state.getType()).getAIPlayer();
-        final AIStrategy strategy = new MinimaxStrategy(aiPlayer);
+        final AIStrategy strategy = new MinimaxStrategy(state.getRuleset(), aiPlayer);
 
         final FutureTask<Action> aiTask = new FutureTask<Action>(() -> {
             // Decide the next move
-            Action action = strategy.decide(state.currentBoard(), state.currentBoard().getActions());
+            Action action = strategy.decide(state.getBoards(),
+                    state.getRuleset().getActions(state.getBoards()));
             Assert.assertNotNull("The AI should not return a null action.", action);
             Log.d(TAG, "AI wants to move " + action.toString());
             return action;
@@ -113,7 +114,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 action = aiTask.get();
 
                 // Step forward the state, enacting events.
-                Board newBoard = state.currentBoard().step(action, this);
+                Board newBoard = state.getRuleset().step(state.getBoards(), action, this);
                 state.pushBoard(action, newBoard);
 
                 if(newBoard.isOver()) {
@@ -189,17 +190,21 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             initializeState();
         } else {
             // Get the current and the previous board.
-            Deque<Board> boards = state.getBoards();
-            final Board currentBoard = boards.pop();
-            final Board lastBoard = boards.peek();
-            boards.push(currentBoard);
+            List<Board> boards = state.getBoards();
+            final Board currentBoard = boards.get(boards.size() - 1);
+            final Board lastBoard = boards.get(boards.size() - 2);
 
-            final Action lastAction = state.getActions().peek();
+            // Remove the "current state"
+            boards.remove(boards.size() - 1);
+
+            // The the action that took us to the current board.
+            List<Action> actions = state.getActions();
+            final Action lastAction = actions.get(actions.size() - 1);
 
             setBoardConfiguration(lastBoard);
 
             Utils.schedule(() -> {
-                lastBoard.step(lastAction, this);
+                state.getRuleset().step(boards, lastAction, this);
                 Utils.schedule(() -> {
                     initializeState();
                 }, 1.0f);
@@ -242,15 +247,19 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
             if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
                 // Get the current and the previous board.
-                Deque<Board> boards = state.getBoards();
-                final Board currentBoard = boards.pop();
-                final Board lastBoard = boards.peek();
-                boards.push(currentBoard);
+                List<Board> boards = state.getBoards();
+                final Board currentBoard = boards.get(boards.size() - 1);
+                final Board lastBoard = boards.get(boards.size() - 2);
 
-                final Action lastAction = state.getActions().peek();
+                // Remove the "current state"
+                boards.remove(boards.size() - 1);
+
+                // Get the action that took us from the last state to the current state
+                List<Action> actions = state.getActions();
+                final Action lastAction = actions.get(actions.size() - 1);
 
                 setBoardConfiguration(lastBoard);
-                lastBoard.step(lastAction, this);
+                state.getRuleset().step(boards, lastAction, this);
                 Utils.schedule(() -> {
                     if(currentBoard.isOver()) {
                         showWinner();
@@ -312,7 +321,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
             // Step forward the state, enacting events.
             stagedAction = action;
-            stagedBoard = state.currentBoard().step(stagedAction, this);
+            stagedBoard = state.getRuleset().step(state.getBoards(), stagedAction, this);
 
             // Ask for move confirmation.
             moveState = MoveState.CONFIRM_MOVE;
@@ -401,7 +410,10 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             stage.addActor(selection);
 
             // Create move markers.
-            for (Action action : state.currentBoard().getActions(piece.getPosition())) {
+            for (Action action : state.getRuleset().getActions(state.getBoards())) {
+                if (!piece.getPosition().equals(action.getFrom()))
+                    continue;
+
                 MoveMarker move = new MoveMarker(this, piece, action);
                 moveSelectors.add(move);
                 stage.addActor(move);
@@ -427,7 +439,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         pieceActors.clear();
 
         // Add in the new actors.
-        for(Map.Entry<Position, Piece> piece : board.getPieces()) {
+        for(Map.Entry<Position, Piece> piece : board.getPieces().entrySet()) {
             PieceActor actor = new PieceActor(this, piece.getValue(), piece.getKey());
             stage.addActor(actor);
             pieceActors.add(actor);

@@ -1,7 +1,6 @@
 package net.varunramesh.hnefatafl.ai;
 
 import android.util.Log;
-import android.util.Pair;
 
 import junit.framework.Assert;
 
@@ -11,7 +10,9 @@ import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
 import net.varunramesh.hnefatafl.simulator.Winner;
+import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,10 +33,10 @@ public class MinimaxStrategy implements AIStrategy {
     }
 
     /** The default value for searchDepth */
-    public static final int DEFAULT_EARCH_DEPTH = 2;
+    public static final int DEFAULT_SEARCH_DEPTH = 2;
 
     /** The player that the AI represents. */
-    public final Player player;
+    private final Player player;
 
     /** The number of Plys to search forward */
     private final int searchDepth;
@@ -46,32 +47,37 @@ public class MinimaxStrategy implements AIStrategy {
      * */
     private int leaves = 0;
 
-    public MinimaxStrategy(Player player) {
-        this(player, DEFAULT_EARCH_DEPTH);
+    private final Ruleset ruleset;
+
+    public MinimaxStrategy(Ruleset ruleset, Player player) {
+        this(ruleset, player, DEFAULT_SEARCH_DEPTH);
     }
 
-    public MinimaxStrategy(Player player, int searchDepth) {
+    public MinimaxStrategy(Ruleset ruleset, Player player, int searchDepth) {
+        this.ruleset = ruleset;
         this.player = player;
         this.searchDepth = searchDepth;
     }
 
 
     @Override
-    public Action decide(Board board, Set<Action> actions) {
-        Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
-        Assert.assertTrue("We need some options to pick from.", board.getActions().size() > 0);
+    public Action decide(List<Board> history, Set<Action> actions) {
+        Board currentBoard = history.get(history.size() - 1);
+
+        Assert.assertEquals("AI player is current player.", currentBoard.getCurrentPlayer(), player);
+        Assert.assertTrue("We need some options to pick from.", ruleset.getActions(history).size() > 0);
 
         // Clear leaves count.
         leaves = 0;
 
         Log.d(TAG, "Starting a Minimax search with depth " + searchDepth + ".");
-        Action action = max(board, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
+        Action action = max(history, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
         Log.d(TAG, "MinimaxStrategy searched " + leaves + " possible game states.");
 
         // Should never happen, but to prevent crashes.
         if (action == null) {
             Log.wtf(TAG, "MinimaxStrategy returned null action. Falling back to RandomStrategy.");
-            return new RandomStrategy().decide(board, actions);
+            return new RandomStrategy().decide(history, actions);
         }
 
         return action;
@@ -91,19 +97,19 @@ public class MinimaxStrategy implements AIStrategy {
         float score = 0.0f;
 
         // Start by counting how many pieces each player has.
-        for (Map.Entry<Position, Piece> piece : board.getPieces()) {
-            if(Board.PlayerOwnsPiece(player, piece.getValue()))
+        for (Map.Entry<Position, Piece> piece : board.getPieces().entrySet()) {
+            if(player.ownsPiece(piece.getValue()))
                 score += 1.0f;
             else
                 score -= 1.0f;
         }
 
         // Find the shortest distance between the King and any corner of the board.
-        for(Map.Entry<Position, Piece> king : board.getPieces(Piece.KING)) {
-            int topLeftDist = king.getKey().distanceTo(new Position(0, 0));
-            int topRightDist = king.getKey().distanceTo(new Position(board.getBoardSize() - 1, 0));
-            int bottomLeftDist = king.getKey().distanceTo(new Position(0, board.getBoardSize() - 1));
-            int bottomRightDist = king.getKey().distanceTo(new Position(board.getBoardSize() - 1, board.getBoardSize() - 1));
+        for(Position kingPos : board.getPositionsOfPiece(Piece.KING)) {
+            int topLeftDist = kingPos.distanceTo(new Position(0, 0));
+            int topRightDist = kingPos.distanceTo(new Position(board.getBoardSize() - 1, 0));
+            int bottomLeftDist = kingPos.distanceTo(new Position(0, board.getBoardSize() - 1));
+            int bottomRightDist = kingPos.distanceTo(new Position(board.getBoardSize() - 1, board.getBoardSize() - 1));
 
             int shortestDist = Math.min(
                     Math.min(topLeftDist, topRightDist),
@@ -124,13 +130,18 @@ public class MinimaxStrategy implements AIStrategy {
     /** Whether or not to use ALPHA_BETA_PRUNING to prune search paths */
     public static final boolean ALPHA_BETA_PRUNING = true;
 
-    public Result max(Board board, int depth, float alpha, float beta) {
+    public Result max(List<Board> history, int depth, float alpha, float beta) {
+        Board board = history.get(history.size() - 1);
         Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result max = null;
-        for(Action action : board.getActions()) {
-            Result result = min(board.step(action), depth - 1, alpha, beta);
+        for(Action action : ruleset.getActions(history)) {
+            // Simulate a step, and then recurse.
+            history.add(ruleset.step(history, action, null));
+            Result result = min(history, depth - 1, alpha, beta);
+            history.remove(history.size() - 1);
+
             if(max == null || result.score > max.score)
                 max = new Result(action, result.score);
 
@@ -142,13 +153,18 @@ public class MinimaxStrategy implements AIStrategy {
         return max;
     }
 
-    public Result min(Board board, int depth, float alpha, float beta) {
+    public Result min(List<Board> history, int depth, float alpha, float beta) {
+        Board board = history.get(history.size() - 1);
         Assert.assertFalse("AI Player is not current player.", board.getCurrentPlayer() == player);
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result min = null;
-        for(Action action : board.getActions()) {
-            Result result = max(board.step(action), depth - 1, alpha, beta);
+        for(Action action : ruleset.getActions(history)) {
+            // Simulate a step, and then recurse.
+            history.add(ruleset.step(history, action, null));
+            Result result = max(history, depth - 1, alpha, beta);
+            history.remove(history.size() - 1);
+
             if(min == null || result.score < min.score)
                 min = new Result(action, result.score);
 

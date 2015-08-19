@@ -16,7 +16,7 @@ public class RandomStrategy implements AIStrategy {
     private final Random random = new Random();
 
     @Override
-    public Action decide(Board board, Set<Action> actions) {
+    public Action decide(List<Board> history, Set<Action> actions) {
         assert actions.size() > 0;
         List<Action> list = new ArrayList<>(actions);
         return list.get(random.nextInt(actions.size()));
