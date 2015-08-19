@@ -34,6 +34,8 @@ return Stream.of(Direction.values()).allMatch((Direction dir) -> {
   return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
 });
 ```
+### Prefer Optional<T> over Nullable Type?
+I'm not sure about this entirely, but if it seems that you do need to use `null` as an extra "undetermined" state for a value, it might be better to use the Optional wrapper (part of the Stream backports). Optional will force you to do an `isPresent` check, thus preventing easy mistakes where you try to operate on a `null` object.
 
 ### Other
 - Generally avoid nulls

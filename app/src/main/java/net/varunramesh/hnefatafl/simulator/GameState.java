@@ -2,10 +2,12 @@ package net.varunramesh.hnefatafl.simulator;
 
 import com.annimon.stream.function.Consumer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.Deque;
+import java.util.Stack;
 import java.util.UUID;
 
 /**
@@ -52,6 +54,18 @@ public class GameState implements Serializable {
     /** The current configuration of the board */
     public Board currentBoard() { return boards.peek(); }
 
+    /** Get the list of boards */
+    public Deque<Board> getBoards() { return boards; }
+
+    /** Get the list of actions */
+    public Deque<Action> getActions() { return actions; }
+
+    /**
+     * Push an action and it's resulting board onto the game's history. If this GameState object
+     * has a persister set, then try to persist the state.
+     * @param action The action that the current player has just finalized.
+     * @param board The new state of the board that resulted from that action.
+     */
     public void pushBoard(Action action, Board board) {
         this.actions.push(action);
         this.boards.push(board);

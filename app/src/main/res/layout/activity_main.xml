@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--android:id="@+id/drawer_layout"-->
-
     <com.github.florent37.materialviewpager.MaterialViewPager
         android:id="@+id/materialViewPager"
         android:layout_width="match_parent"
@@ -27,19 +25,6 @@
         app:viewpager_animatedHeaderImage="true"
         />
 
-    <!--<include layout="@layout/drawer" />
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="11"
-            android:layout_centerHorizontal="true"/>
-
-    </RelativeLayout>-->
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:materialdesign="http://schemas.android.com/apk/res-auto"

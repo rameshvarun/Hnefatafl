@@ -27,19 +27,128 @@
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:paddingTop="10dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Attacker&apos;s Turn"
-            android:id="@+id/currentPlayer"
-            android:textColor="@android:color/black"
-            android:textSize="35dp" />
+            android:gravity="center_horizontal"
+            android:id="@+id/online_match_view">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:id="@+id/attacker_card"
+                android:background="@color/current_player">
+
+                <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:id="@+id/attackericon"
+                    android:src="@drawable/placeholder_avatar" />
+
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_alignTop="@id/attackericon"
+                        android:layout_alignRight="@id/attackericon"
+                        android:src="@drawable/attacker_icon" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Attacker"
+                    android:id="@+id/attackername"
+                    android:gravity="center_horizontal" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="VS"
+                android:id="@+id/textView2"
+                android:textColor="@android:color/black"
+                android:gravity="center_vertical"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:id="@+id/defender_card">
+
+                <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:id="@+id/defendericon"
+                    android:src="@drawable/placeholder_avatar" />
+
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_alignTop="@id/defendericon"
+                        android:layout_alignRight="@id/defendericon"
+                        android:src="@drawable/defender_icon" />
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Defender"
+                    android:id="@+id/defendername"
+                    android:gravity="center_horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
+
+            <com.gc.materialdesign.views.ProgressBarCircularIndeterminate
+                android:id="@+id/ailoading"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="#1E88E5"
+                android:layout_marginRight="5dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Attacker&apos;s Turn"
+                android:id="@+id/currentPlayer"
+                android:textColor="@android:color/black"
+                android:textSize="35dp"
+                android:gravity="center_vertical" />
+        </LinearLayout>
+
     </LinearLayout>
 
 </FrameLayout>
