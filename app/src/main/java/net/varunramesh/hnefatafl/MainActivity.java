@@ -45,6 +45,8 @@ import org.apache.commons.lang3.SerializationUtils;
 
 import java.util.ArrayList;
 
+import javax.xml.validation.Validator;
+
 public class MainActivity extends BaseGameActivity {
 
     private MaterialViewPager mViewPager;
@@ -242,30 +244,32 @@ public class MainActivity extends BaseGameActivity {
                 // Get the invitee list.
                 final ArrayList<String> invitees = intent.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
 
-                // Get auto-match criteria.
-                Bundle autoMatchCriteria = null;
-                int minAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
-                int maxAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
-                if (minAutoMatchPlayers > 0) {
-                    autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
-                } else {
-                    autoMatchCriteria = null;
-                }
+                showRulesetPicker((Ruleset ruleset) -> {
+                    // Get auto-match criteria.
+                    Bundle autoMatchCriteria = null;
+                    int minAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
+                    int maxAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
+                    if (minAutoMatchPlayers > 0) {
+                        autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
+                    } else {
+                        autoMatchCriteria = null;
+                    }
 
-                // TODO: Add Game Variant
+                    // TODO: Add Game Variant
 
-                TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder()
-                        .addInvitedPlayers(invitees)
-                        .setAutoMatchCriteria(autoMatchCriteria)
-                        .build();
+                    TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder()
+                            .addInvitedPlayers(invitees)
+                            .setAutoMatchCriteria(autoMatchCriteria)
+                            .setVariant(rulesetToVariantId(ruleset))
+                            .build();
 
-                // Create and start the match.
-                Games.TurnBasedMultiplayer
-                        .createMatch(getApiClient(), tbmc)
-                        .setResultCallback((TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) -> {
-                            onInitiateMatchResult(initiateMatchResult);
-                        });
-
+                    // Create and start the match.
+                    Games.TurnBasedMultiplayer
+                            .createMatch(getApiClient(), tbmc)
+                            .setResultCallback((TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) -> {
+                                onInitiateMatchResult(initiateMatchResult);
+                            });
+                });
                 break;
             }
             case RC_VIEW_INBOX: {
@@ -306,7 +310,7 @@ public class MainActivity extends BaseGameActivity {
                 String defendingParticipantId = (player == Player.ATTACKER) ? otherParticipantId.get() : myParticipantId;
 
                 GameState gameState = new GameState(new GameType.OnlineMatch(attackingParticipantId, defendingParticipantId),
-                        new FeltarHnefatafl());
+                        variantIdToRuleset(match.getVariant()));
                 byte[] serialized = SerializationUtils.serialize(gameState);
 
                 Games.TurnBasedMultiplayer.takeTurn(getApiClient(), match.getMatchId(), serialized, attackingParticipantId)
@@ -329,6 +333,27 @@ public class MainActivity extends BaseGameActivity {
             startActivity(PlayerActivity.createIntent(this, match));
         } else {
             Toast.makeText(this, "Invitation Sent", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static int rulesetToVariantId(Ruleset ruleset) {
+        if (ruleset instanceof Brandubh) {
+            return 1;
+        } else if (ruleset instanceof FeltarHnefatafl) {
+            return 2;
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static Ruleset variantIdToRuleset(int variant) {
+        switch (variant) {
+            case 1:
+                return new Brandubh();
+            case 2:
+                return new FeltarHnefatafl();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 }
