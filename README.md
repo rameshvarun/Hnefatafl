@@ -18,7 +18,7 @@ Hnefatafl is a family of 2-player Viking board games, where one player tries to 
 
 ## Programming Patterns
 ### Retrolambda
-Right now, we're using Retrolambda, which lets you use Java 8 lambda syntax. Essentially, this works in any situation in which you would create an anonymous class from an single-function interface.
+Right now, we're using Retrolambda, which lets you use Java 8 lambda syntax. Essentially, this works in any situation in which you would create an anonymous class from an single-function interface. Careful though, as anything you capture will be kept around by the GC, since it is tied to the life of the lambda.
 ```java
 builder.setTitle("You Have Won The Game.")
   .setPositiveButton("Return to Menu", (DialogInterface sideDialog, int which) -> {
@@ -34,8 +34,8 @@ return Stream.of(Direction.values()).allMatch((Direction dir) -> {
   return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
 });
 ```
-### Prefer Optional<T> over Nullable Type?
-I'm not sure about this entirely, but if it seems that you do need to use `null` as an extra "undetermined" state for a value, it might be better to use the Optional wrapper (part of the Stream backports). Optional will force you to do an `isPresent` check, thus preventing easy mistakes where you try to operate on a `null` object.
+### Prefer Optional<T> over a Nullable Variable
+If you do need to have an extra "undetermined" state for a value, it might be better to use the Optional wrapper (part of the Stream backports). Optional will force you to do an `isPresent` check, thus preventing easy mistakes where you try to operate on a `null` object.
 
 ### Other
 - Generally avoid nulls
