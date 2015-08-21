@@ -2,11 +2,15 @@ package net.varunramesh.hnefatafl.simulator;
 
 import com.annimon.stream.function.Consumer;
 
+import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 
@@ -18,10 +22,14 @@ public class GameState implements Serializable {
     private final GameType type;
 
     /** The entire board history of the match */
-    private final Deque<Board> boards = new ArrayDeque<Board>();
+    private final List<Board> boards = new LinkedList<>();
 
     /** The action history of the match */
-    private final Deque<Action> actions = new ArrayDeque<Action>();
+    private final List<Action> actions = new LinkedList<>();
+
+    /** The Ruleset that this match uses */
+    private final Ruleset ruleset;
+    public Ruleset getRuleset() { return ruleset; }
 
     /** A unique id to reference this game */
     private final UUID uuid;
@@ -35,14 +43,15 @@ public class GameState implements Serializable {
     private Date lastMoveDate;
     public Date getLastMoveDate() { return lastMoveDate; }
 
-    /** A function that can be produced */
+    /** A function that can be used to save the GameState */
     private transient Persister persister;
     public void setPersister(Persister persister) { this.persister = persister; }
 
-    public GameState(GameType type) {
+    public GameState(GameType type, Ruleset ruleset) {
         this.type = type;
-        this.boards.push(new Board());
+        this.boards.add(ruleset.getStartingConfiguration());
         this.uuid = UUID.randomUUID();
+        this.ruleset = ruleset;
 
         this.createdDate = new Date();
         this.lastMoveDate = new Date();
@@ -52,13 +61,13 @@ public class GameState implements Serializable {
     public boolean isFirstMove() { return actions.size() == 0; }
 
     /** The current configuration of the board */
-    public Board currentBoard() { return boards.peek(); }
+    public Board currentBoard() { return boards.get(boards.size() - 1); }
 
     /** Get the list of boards */
-    public Deque<Board> getBoards() { return boards; }
+    public List<Board> getBoards() { return new LinkedList<>(boards); }
 
     /** Get the list of actions */
-    public Deque<Action> getActions() { return actions; }
+    public List<Action> getActions() { return new LinkedList<>(actions); }
 
     /**
      * Push an action and it's resulting board onto the game's history. If this GameState object
@@ -67,8 +76,11 @@ public class GameState implements Serializable {
      * @param board The new state of the board that resulted from that action.
      */
     public void pushBoard(Action action, Board board) {
-        this.actions.push(action);
-        this.boards.push(board);
+        // Push the new board, and the action that got us there.
+        this.actions.add(action);
+        this.boards.add(board);
+
+        // Save the current time.
         this.lastMoveDate = new Date();
 
         // Try to persist the game state.

@@ -7,10 +7,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -23,19 +21,14 @@ import com.annimon.stream.Stream;
 import com.annimon.stream.function.Consumer;
 import com.cocosw.bottomsheet.BottomSheet;
 import com.gc.materialdesign.views.ButtonFloat;
-import com.gc.materialdesign.widgets.SnackBar;
 import com.github.florent37.materialviewpager.MaterialViewPager;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.Players;
 import com.google.android.gms.games.multiplayer.Multiplayer;
-import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
-import com.google.android.gms.wearable.Asset;
 import com.google.example.games.basegameutils.BaseGameActivity;
 
 import junit.framework.Assert;
@@ -44,12 +37,15 @@ import net.varunramesh.hnefatafl.game.PlayerActivity;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.GameType;
 import net.varunramesh.hnefatafl.simulator.Player;
+import net.varunramesh.hnefatafl.simulator.rulesets.Brandubh;
+import net.varunramesh.hnefatafl.simulator.rulesets.FeltarHnefatafl;
+import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
 
 import org.apache.commons.lang3.SerializationUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.List;
+
+import javax.xml.validation.Validator;
 
 public class MainActivity extends BaseGameActivity {
 
@@ -134,8 +130,10 @@ public class MainActivity extends BaseGameActivity {
             .listener((DialogInterface dialog, int item) -> {
                 switch (item) {
                     case R.id.action_pass_and_play: {
-                        GameState gameState = new GameState(new GameType.PassAndPlay());
-                        startActivity(PlayerActivity.createIntent(this, gameState));
+                        showRulesetPicker((Ruleset ruleset) -> {
+                            GameState gameState = new GameState(new GameType.PassAndPlay(), ruleset);
+                            startActivity(PlayerActivity.createIntent(this, gameState));
+                        });
                         break;
                     }
                     case R.id.action_online_match: {
@@ -149,7 +147,7 @@ public class MainActivity extends BaseGameActivity {
                     }
                     case R.id.action_player_vs_ai: {
                         showSidePickDialog((Player player) -> {
-                            GameState gameState = new GameState(new GameType.PlayerVsAI(player));
+                            GameState gameState = new GameState(new GameType.PlayerVsAI(player), new Brandubh());
                             startActivity(PlayerActivity.createIntent(this, gameState));
                         });
                         break;
@@ -178,6 +176,32 @@ public class MainActivity extends BaseGameActivity {
                 .setPositiveButton("Start", (DialogInterface sideDialog, int which) -> {
                     Player player = (choice.value == 0) ? Player.ATTACKER : Player.DEFENDER;
                     callback.accept(player);
+                }).show();
+    }
+
+    private void showRulesetPicker(Consumer<Ruleset> continuation) {
+        final Mutable.Integer choice = new Mutable.Integer();
+
+        AlertDialogPro.Builder builder = new AlertDialogPro.Builder(this);
+        builder.setTitle("Pick A Variant...")
+                .setSingleChoiceItems(
+                        new String[]{"Feltar Hnefatafl (11x11)", "Brandubh (7x7)"}, -1, (DialogInterface sideDialog, int which) -> {
+                            choice.value = which;
+                        }
+                )
+                .setCancelable(true)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Start", (DialogInterface sideDialog, int which) -> {
+                    switch (choice.value) {
+                        case 0:
+                            continuation.accept(new FeltarHnefatafl());
+                            break;
+                        case 1:
+                            continuation.accept(new Brandubh());
+                            break;
+                        default:
+                            throw new UnsupportedOperationException();
+                    }
                 }).show();
     }
 
@@ -220,30 +244,32 @@ public class MainActivity extends BaseGameActivity {
                 // Get the invitee list.
                 final ArrayList<String> invitees = intent.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
 
-                // Get auto-match criteria.
-                Bundle autoMatchCriteria = null;
-                int minAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
-                int maxAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
-                if (minAutoMatchPlayers > 0) {
-                    autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
-                } else {
-                    autoMatchCriteria = null;
-                }
+                showRulesetPicker((Ruleset ruleset) -> {
+                    // Get auto-match criteria.
+                    Bundle autoMatchCriteria = null;
+                    int minAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
+                    int maxAutoMatchPlayers = intent.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
+                    if (minAutoMatchPlayers > 0) {
+                        autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
+                    } else {
+                        autoMatchCriteria = null;
+                    }
 
-                // TODO: Add Game Variant
+                    // TODO: Add Game Variant
 
-                TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder()
-                        .addInvitedPlayers(invitees)
-                        .setAutoMatchCriteria(autoMatchCriteria)
-                        .build();
+                    TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder()
+                            .addInvitedPlayers(invitees)
+                            .setAutoMatchCriteria(autoMatchCriteria)
+                            .setVariant(rulesetToVariantId(ruleset))
+                            .build();
 
-                // Create and start the match.
-                Games.TurnBasedMultiplayer
-                        .createMatch(getApiClient(), tbmc)
-                        .setResultCallback((TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) -> {
-                            onInitiateMatchResult(initiateMatchResult);
-                        });
-
+                    // Create and start the match.
+                    Games.TurnBasedMultiplayer
+                            .createMatch(getApiClient(), tbmc)
+                            .setResultCallback((TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) -> {
+                                onInitiateMatchResult(initiateMatchResult);
+                            });
+                });
                 break;
             }
             case RC_VIEW_INBOX: {
@@ -283,7 +309,8 @@ public class MainActivity extends BaseGameActivity {
                 String attackingParticipantId = (player == Player.ATTACKER) ? myParticipantId : otherParticipantId.get();
                 String defendingParticipantId = (player == Player.ATTACKER) ? otherParticipantId.get() : myParticipantId;
 
-                GameState gameState = new GameState(new GameType.OnlineMatch(attackingParticipantId, defendingParticipantId));
+                GameState gameState = new GameState(new GameType.OnlineMatch(attackingParticipantId, defendingParticipantId),
+                        variantIdToRuleset(match.getVariant()));
                 byte[] serialized = SerializationUtils.serialize(gameState);
 
                 Games.TurnBasedMultiplayer.takeTurn(getApiClient(), match.getMatchId(), serialized, attackingParticipantId)
@@ -306,6 +333,27 @@ public class MainActivity extends BaseGameActivity {
             startActivity(PlayerActivity.createIntent(this, match));
         } else {
             Toast.makeText(this, "Invitation Sent", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static int rulesetToVariantId(Ruleset ruleset) {
+        if (ruleset instanceof Brandubh) {
+            return 1;
+        } else if (ruleset instanceof FeltarHnefatafl) {
+            return 2;
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static Ruleset variantIdToRuleset(int variant) {
+        switch (variant) {
+            case 1:
+                return new Brandubh();
+            case 2:
+                return new FeltarHnefatafl();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 }

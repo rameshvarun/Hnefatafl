@@ -11,7 +11,7 @@ public abstract class GameType implements Serializable {
             this.humanPlayer = humanPlayer;
         }
         public Player getHumanPlayer() { return humanPlayer; }
-        public Player getAIPlayer() { return Utils.otherPlayer(humanPlayer); };
+        public Player getAIPlayer() { return humanPlayer.other(); };
     }
     public static final class OnlineMatch extends GameType {
         private final String attackerParticipantId;

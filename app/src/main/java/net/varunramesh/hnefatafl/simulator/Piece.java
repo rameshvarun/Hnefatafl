@@ -6,7 +6,10 @@ package net.varunramesh.hnefatafl.simulator;
 public enum Piece {
     ATTACKER,
     DEFENDER,
-    KING;
+    KING,
+    KNIGHT,
+    COMMANDER;
+
     public boolean hostileTo(Piece other) {
         if(this == ATTACKER)
             return other == DEFENDER || other == KING;
