@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.google.android.gms.common.api.Api;
 
@@ -35,6 +36,8 @@ public class PieceActor extends Actor implements LayerActor {
 
     private Position boardPosition;
     private final HnefataflGame game;
+
+    private Optional<SequenceAction> captureAction;
 
     @Override
     public Actor hit (float x, float y, boolean touchable) {
@@ -65,6 +68,7 @@ public class PieceActor extends Actor implements LayerActor {
         setHeight(texture.getHeight());
         setWorldPosition(game.toWorldPosition(boardPos));
 
+        captureAction = Optional.empty();
 
         final PieceActor piece = this;
         this.addListener(new InputListener() {
@@ -104,7 +108,7 @@ public class PieceActor extends Actor implements LayerActor {
                     Optional<MoveMarker> closestMarker = Stream.of(game.getMoveSelectors()).filter((Actor a) -> {
                         return a instanceof MoveMarker;
                     }).map((Actor a) -> {
-                        return (MoveMarker)a;
+                        return (MoveMarker) a;
                     }).filter((MoveMarker marker) -> {
                         return game.toWorldPosition(marker.getPosition()).dst(touch) < BoardActor.SQUARE_SIZE;
                     }).min((MoveMarker lhs, MoveMarker rhs) -> {
@@ -114,7 +118,7 @@ public class PieceActor extends Actor implements LayerActor {
                         );
                     });
 
-                    if(closestMarker.isPresent()) {
+                    if (closestMarker.isPresent()) {
                         game.stageAction(closestMarker.get().getAction());
                     } else {
                         piece.slideTo(boardPosition);
@@ -154,14 +158,30 @@ public class PieceActor extends Actor implements LayerActor {
     }
 
     public void capture() {
-        addAction(Actions.sequence(
-                Actions.delay(0.6f),
-                Actions.parallel(
-                        Actions.moveBy(0, 2024.0f, 2.0f, Interpolation.pow3In),
-                        Actions.fadeOut(2.0f, Interpolation.pow3In)
-                ),
-                Actions.removeActor()
-        ));
+        if(!captureAction.isPresent()) {
+            captureAction = Optional.of(Actions.sequence(
+                    Actions.delay(0.6f),
+                    Actions.parallel(
+                            Actions.moveBy(0, 2024.0f, 2.0f, Interpolation.pow3In),
+                            Actions.fadeOut(2.0f, Interpolation.pow3In)
+                    ),
+                    Actions.removeActor()
+            ));
+            addAction(captureAction.get());
+        }
+    }
+
+    public void cancelCapture() {
+        if(captureAction.isPresent()) {
+            Log.d(TAG, "Canceled the capture action");
+            removeAction(captureAction.get());
+            addAction(Actions.removeActor());
+            captureAction = Optional.empty();
+        }
+    }
+
+    public boolean isCaptured() {
+        return captureAction.isPresent();
     }
 
     @Override

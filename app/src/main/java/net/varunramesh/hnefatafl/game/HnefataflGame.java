@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -117,7 +118,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 Board newBoard = state.getRuleset().step(state.getBoards(), action, this);
                 state.pushBoard(action, newBoard);
 
-                if(newBoard.isOver()) {
+                if (newBoard.isOver()) {
                     moveState = MoveState.WINNER_DETERMINED;
                     showWinner();
                 } else {
@@ -152,7 +153,6 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Log.d(TAG, "Removed piece from " + position.toString() + ".");
         PieceActor actor = getPieceActorAt(position);
         assert actor != null;
-        pieceActors.remove(actor);
         actor.capture();
     }
 
@@ -333,6 +333,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private void cancelMove() {
         // In order to cancel a move, we must already have staged a move.
         if(moveState == MoveState.CONFIRM_MOVE) {
+
+            // Cancel any capture events/animations
+            for(PieceActor pieceActor : pieceActors) {
+                pieceActor.cancelCapture();
+            }
+
             // Set board back to original state.
             setBoardConfiguration(state.currentBoard());
 
@@ -345,6 +351,15 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
     private void confirmMove() {
         // In order to confirm a move, we must already have staged a move.
         if(moveState == MoveState.CONFIRM_MOVE) {
+
+            // Confirm any captures
+            Iterator<PieceActor> i = pieceActors.iterator();
+            while(i.hasNext()) {
+                if(i.next().isCaptured()) {
+                    i.remove();
+                }
+            }
+
             state.pushBoard(stagedAction, stagedBoard);
 
             // Hide the confirmation UI.
