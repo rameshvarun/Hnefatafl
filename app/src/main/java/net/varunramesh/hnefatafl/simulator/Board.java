@@ -115,4 +115,27 @@ public final class Board implements Serializable {
         squares.add(new Position(boardSize - 1, boardSize - 1));
         return squares;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Board board = (Board) o;
+
+        if (boardSize != board.boardSize) return false;
+        if (!pieces.equals(board.pieces)) return false;
+        if (currentPlayer != board.currentPlayer) return false;
+        return winner == board.winner;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = pieces.hashCode();
+        result = 31 * result + currentPlayer.hashCode();
+        result = 31 * result + winner.hashCode();
+        result = 31 * result + boardSize;
+        return result;
+    }
 }

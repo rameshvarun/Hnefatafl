@@ -178,7 +178,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
             for(Position pos = position.getNeighbor(dir); board.contains(pos); pos = pos.getNeighbor(dir)) {
                 if(pieces.containsKey(pos)) break;
                 else {
-                    if(piece != Piece.KING && isKingOnlySquare(board, pos))
+                    if(piece != Piece.KING && isKingOnlySquare(pos))
                         continue;
                     actions.add(new Action(currentPlayer, position, pos));
                 }
@@ -187,9 +187,13 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         return actions;
     }
 
-    /** Returns true if the square is a King-Only Square */
-    public boolean isKingOnlySquare(Board board, Position pos) {
-        return board.getCenterSquare().equals(pos) || board.getCornerSquares().contains(pos);
+    /** Returns true if the square is a King-Only Square. Hard-coded for performance. */
+    public boolean isKingOnlySquare(Position pos) {
+        return (pos.getX() == 5 && pos.getY() == 5) ||
+                (pos.getX() == 0 && pos.getX() == 0) ||
+                (pos.getX() == 0 && pos.getX() == 10) ||
+                (pos.getX() == 10 && pos.getX() == 0) ||
+                (pos.getX() == 10 && pos.getX() == 10);
     }
 
     public boolean kingInRefugeeSquare(Board board) {
