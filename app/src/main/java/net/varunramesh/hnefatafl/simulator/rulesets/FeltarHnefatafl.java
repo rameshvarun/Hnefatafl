@@ -163,6 +163,8 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         return actions;
     }
 
+    private static Direction[] directions = Direction.values();
+
     /** Helper function: Get all of the actions that the piece at the given position can take */
     private Set<Action> getActionsForPiece(Board board, Position position) {
         PMap<Position, Piece> pieces = board.getPieces();
@@ -174,7 +176,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         Assert.assertTrue(currentPlayer.ownsPiece(piece));
 
         Set<Action> actions = new HashSet<>();
-        for(Direction dir : Direction.values()) {
+        for(Direction dir : directions) {
             for(Position pos = position.getNeighbor(dir); board.contains(pos); pos = pos.getNeighbor(dir)) {
                 if(pieces.containsKey(pos)) break;
                 else {
