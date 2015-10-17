@@ -1,5 +1,7 @@
 package net.varunramesh.hnefatafl.simulator.rulesets;
 
+import android.util.LruCache;
+
 import com.annimon.stream.Stream;
 
 import junit.framework.Assert;
@@ -105,7 +107,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         if(eventHandler != null) eventHandler.movePiece(action.getFrom(), action.getTo());
 
         // Look to see if any adjacent opposing piece has been sandwiched.
-        for(Direction dir : Direction.values()) {
+        for(Direction dir : directions) {
             final Position pos = action.getTo().getNeighbor(dir);
             if(newPieces.containsKey(pos)) {
                 Piece adjacentPiece = newPieces.get(pos);
@@ -141,13 +143,15 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
 
     @Override
     public Set<Action> getActions(List<Board> history) {
-       return getActions(history.get(history.size() - 1));
+        Board currentBoard = history.get(history.size() - 1);
+        return getActions(currentBoard);
     }
 
     @Override
     public int getAISearchDepth() {
         return 2;
     }
+
 
     private Set<Action> getActions(Board currentBoard) {
         // If the game is over, return the empty set.
@@ -158,15 +162,16 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         Player currentPlayer = currentBoard.getCurrentPlayer();
         for(Map.Entry<Position, Piece> piece : currentBoard.getPieces().entrySet()) {
             if (currentPlayer.ownsPiece(piece.getValue()))
-                actions.addAll(getActionsForPiece(currentBoard, piece.getKey()));
+                addActionsForPiece(currentBoard, piece.getKey(), actions);
         }
+
         return actions;
     }
 
     private static Direction[] directions = Direction.values();
 
     /** Helper function: Get all of the actions that the piece at the given position can take */
-    private Set<Action> getActionsForPiece(Board board, Position position) {
+    private void addActionsForPiece(Board board, Position position, Set<Action> actions) {
         PMap<Position, Piece> pieces = board.getPieces();
         Player currentPlayer = board.getCurrentPlayer();
 
@@ -175,7 +180,6 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         Piece piece = pieces.get(position);
         Assert.assertTrue(currentPlayer.ownsPiece(piece));
 
-        Set<Action> actions = new HashSet<>();
         for(Direction dir : directions) {
             for(Position pos = position.getNeighbor(dir); board.contains(pos); pos = pos.getNeighbor(dir)) {
                 if(pieces.containsKey(pos)) break;
@@ -186,16 +190,15 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
                 }
             }
         }
-        return actions;
     }
 
     /** Returns true if the square is a King-Only Square. Hard-coded for performance. */
     public boolean isKingOnlySquare(Position pos) {
         return (pos.getX() == 5 && pos.getY() == 5) ||
-                (pos.getX() == 0 && pos.getX() == 0) ||
-                (pos.getX() == 0 && pos.getX() == 10) ||
-                (pos.getX() == 10 && pos.getX() == 0) ||
-                (pos.getX() == 10 && pos.getX() == 10);
+                (pos.getX() == 0 && pos.getY() == 0) ||
+                (pos.getX() == 0 && pos.getY() == 10) ||
+                (pos.getX() == 10 && pos.getY() == 0) ||
+                (pos.getX() == 10 && pos.getY() == 10);
     }
 
     public boolean kingInRefugeeSquare(Board board) {

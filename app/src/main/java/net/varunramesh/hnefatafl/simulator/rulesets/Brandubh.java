@@ -48,10 +48,10 @@ public class Brandubh extends FeltarHnefatafl {
     @Override
     public boolean isKingOnlySquare(Position pos) {
         return (pos.getX() == 3 && pos.getY() == 3) ||
-                (pos.getX() == 0 && pos.getX() == 0) ||
-                (pos.getX() == 0 && pos.getX() == 6) ||
-                (pos.getX() == 6 && pos.getX() == 0) ||
-                (pos.getX() == 6 && pos.getX() == 6);
+                (pos.getX() == 0 && pos.getY() == 0) ||
+                (pos.getX() == 0 && pos.getY() == 6) ||
+                (pos.getX() == 6 && pos.getY() == 0) ||
+                (pos.getX() == 6 && pos.getY() == 6);
     }
 
     @Override
