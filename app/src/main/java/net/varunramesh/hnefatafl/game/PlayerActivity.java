@@ -232,6 +232,7 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
                     game = realm.createObject(SavedGame.class);
                     game.setId(state.getUUID().toString());
                     game.setCreatedDate(state.getCreatedDate());
+                    game.setGameType(state.getType());
                     Log.d(TAG, "Existing state not found. Creating new one.");
                 }
 

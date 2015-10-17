@@ -6,6 +6,5 @@
 /build
 /captures
 app/app-release.apk
-app/app.iml
-.iml
-/.idea
+*.iml
+.idea/
