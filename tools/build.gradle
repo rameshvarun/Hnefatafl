@@ -1,0 +1,30 @@
+
+apply plugin: 'java'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'junit:junit:4.12'
+    compile 'org.pcollections:pcollections:2.1.2'
+    compile 'com.annimon:stream:1.0.2' // Stream APIs Backported From Java 8.
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir '../app/src/main/java/net/varunramesh/hnefatafl/simulator'
+            srcDir '../app/src/main/java/net/varunramesh/hnefatafl/ai'
+        }
+    }
+}
+
+task commandLinePlayer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'net.varunramesh.hnefatafl.tools.CommandLinePlayer'
+    standardInput = System.in
+}

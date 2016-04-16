@@ -1,7 +1,5 @@
 package net.varunramesh.hnefatafl.simulator.rulesets;
 
-import android.util.LruCache;
-
 import com.annimon.stream.Stream;
 
 import junit.framework.Assert;

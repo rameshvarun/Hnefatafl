@@ -1,7 +1,5 @@
 package net.varunramesh.hnefatafl.ai;
 
-import android.util.Log;
-
 import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.simulator.Action;
