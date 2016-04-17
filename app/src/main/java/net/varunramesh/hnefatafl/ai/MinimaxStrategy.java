@@ -1,6 +1,6 @@
 package net.varunramesh.hnefatafl.ai;
 
-import net.varunramesh.hnefatafl.Logger;
+import android.util.Log;
 
 import junit.framework.Assert;
 
@@ -70,27 +70,27 @@ public class MinimaxStrategy implements AIStrategy {
         // Clear leaves count.
         leaves = 0;
 
-        Logger.debug(TAG, "Starting a Minimax search with depth " + searchDepth + ".");
+        Log.d(TAG, "Starting a Minimax search with depth " + searchDepth + ".");
         Action action = max(history, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
-        Logger.debug(TAG, "MinimaxStrategy searched " + leaves + " possible game states.");
+        Log.d(TAG, "MinimaxStrategy searched " + leaves + " possible game states.");
 
         // Should never happen, but to prevent crashes.
         if (action == null) {
-            Logger.wtf(TAG, "MinimaxStrategy returned null action. Falling back to RandomStrategy.");
+            Log.wtf(TAG, "MinimaxStrategy returned null action. Falling back to RandomStrategy.");
             return new RandomStrategy().decide(history, actions);
         }
 
         return action;
     }
 
-    /** Evaluate how good the board for us. */
+    /** Evaluate how good the board for us */
     public float eval(Board board) {
         ++leaves; // Evaling a board means we have reached a leaf.
 
         // If the game already has a winner, then return -infinity or infinity
         if(board.isOver()) {
-            if(board.getWinner().equals(Winner.DRAW)) return 0;
-            else return board.getWinner().equals(Winner.fromPlayer(player))
+            if(board.getWinner() == Winner.DRAW) return 0;
+            else return board.getWinner() == Winner.fromPlayer(player)
                     ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
         }
 
