@@ -37,10 +37,10 @@ final class OnlinePersister implements Persister {
         Assert.assertNotNull("The GameHelper should be present.", gameHelper);
         GameType.OnlineMatch gameType = (GameType.OnlineMatch) state.getType();
 
-        if (state.currentBoard().isOver()) {
+        if (state.getCurrentBoard().isOver()) {
             ParticipantResult attackerResult;
             ParticipantResult defenderResult;
-            Winner winner = state.currentBoard().getWinner();
+            Winner winner = state.getCurrentBoard().getWinner();
 
             if (winner == Winner.DRAW) {
                 attackerResult = new ParticipantResult(gameType.getAttackerParticipantId(), ParticipantResult.MATCH_RESULT_TIE,
@@ -60,7 +60,7 @@ final class OnlinePersister implements Persister {
                     matchId, SerializationUtils.serialize(state),
                     attackerResult, defenderResult);
         } else {
-            String nextParticipant = (state.currentBoard().getCurrentPlayer() == Player.ATTACKER) ?
+            String nextParticipant = (state.getCurrentBoard().getCurrentPlayer() == Player.ATTACKER) ?
                     gameType.getAttackerParticipantId() : gameType.getDefenderParticipantId();
 
             Games.TurnBasedMultiplayer.takeTurn(gameHelper.getApiClient(),

@@ -39,6 +39,7 @@ import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
 import net.varunramesh.hnefatafl.simulator.GameState;
 import net.varunramesh.hnefatafl.simulator.GameType;
+import net.varunramesh.hnefatafl.simulator.History;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -101,8 +102,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
         final FutureTask<Action> aiTask = new FutureTask<Action>(() -> {
             // Decide the next move
-            Action action = strategy.decide(state.getBoards(),
-                    state.getRuleset().getActions(state.getBoards()));
+            Action action = strategy.decide(state.getHistory(),
+                    state.getRuleset().getActions(state.getHistory()));
             Assert.assertNotNull("The AI should not return a null action.", action);
             Log.d(TAG, "AI wants to move " + action.toString());
             return action;
@@ -115,8 +116,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 action = aiTask.get();
 
                 // Step forward the state, enacting events.
-                Board newBoard = state.getRuleset().step(state.getBoards(), action, this);
-                state.pushBoard(action, newBoard);
+                Board newBoard = state.getRuleset().step(state.getHistory(), action, this);
+                state.advance(action, newBoard);
 
                 if (newBoard.isOver()) {
                     moveState = MoveState.WINNER_DETERMINED;
@@ -181,30 +182,26 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Gdx.input.setInputProcessor(stage);
 
         // Create game board actor.
-        boardActor = new BoardActor(this, state.currentBoard().getBoardSize());
+        boardActor = new BoardActor(this, state.getCurrentBoard().getBoardSize());
         stage.addActor(boardActor);
 
         // If this is the first move, then simply display the board.
         if(state.isFirstMove()) {
-            setBoardConfiguration(state.currentBoard());
+            setBoardConfiguration(state.getCurrentBoard());
             initializeState();
         } else {
             // Get the current and the previous board.
-            List<Board> boards = state.getBoards();
-            final Board currentBoard = boards.get(boards.size() - 1);
-            final Board lastBoard = boards.get(boards.size() - 2);
-
-            // Remove the "current state"
-            boards.remove(boards.size() - 1);
+            History history = state.getHistory();
+            final Board currentBoard = history.getCurrentBoard();
+            final Board lastBoard = history.getBoards().get(1);
 
             // The the action that took us to the current board.
-            List<Action> actions = state.getActions();
-            final Action lastAction = actions.get(actions.size() - 1);
+            final Action lastAction = state.getHistory().getLastAction();
 
             setBoardConfiguration(lastBoard);
 
             Utils.schedule(() -> {
-                state.getRuleset().step(boards, lastAction, this);
+                state.getRuleset().step(history.previous(), lastAction, this);
                 Utils.schedule(() -> {
                     initializeState();
                 }, 1.0f);
@@ -247,19 +244,15 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
             if(match.getTurnStatus() == TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN) {
                 // Get the current and the previous board.
-                List<Board> boards = state.getBoards();
-                final Board currentBoard = boards.get(boards.size() - 1);
-                final Board lastBoard = boards.get(boards.size() - 2);
-
-                // Remove the "current state"
-                boards.remove(boards.size() - 1);
+                History history = state.getHistory();
+                final Board currentBoard = history.getCurrentBoard();
+                final Board lastBoard = history.getBoards().get(1);
 
                 // Get the action that took us from the last state to the current state
-                List<Action> actions = state.getActions();
-                final Action lastAction = actions.get(actions.size() - 1);
+                final Action lastAction = history.getLastAction();
 
                 setBoardConfiguration(lastBoard);
-                state.getRuleset().step(boards, lastAction, this);
+                state.getRuleset().step(history.previous(), lastAction, this);
                 Utils.schedule(() -> {
                     if(currentBoard.isOver()) {
                         showWinner();
@@ -281,11 +274,11 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         } else if (state.getType() instanceof GameType.PlayerVsAI) {
             GameType.PlayerVsAI pvaState = (GameType.PlayerVsAI) state.getType();
 
-            Log.d(TAG, state.currentBoard().getCurrentPlayer().toString());
+            Log.d(TAG, state.getCurrentBoard().getCurrentPlayer().toString());
             Log.d(TAG, pvaState.getHumanPlayer().toString());
 
             // For a player vs. AI game, go to select move state if the current player is the human player.
-            if(state.currentBoard().getCurrentPlayer().equals(pvaState.getHumanPlayer())) {
+            if(state.getCurrentBoard().getCurrentPlayer().equals(pvaState.getHumanPlayer())) {
                 moveState = MoveState.SELECT_MOVE;
             } else {
                 moveState = MoveState.AI_MOVE;
@@ -321,7 +314,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
             // Step forward the state, enacting events.
             stagedAction = action;
-            stagedBoard = state.getRuleset().step(state.getBoards(), stagedAction, this);
+            stagedBoard = state.getRuleset().step(state.getHistory(), stagedAction, this);
 
             // Ask for move confirmation.
             moveState = MoveState.CONFIRM_MOVE;
@@ -340,7 +333,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             }
 
             // Set board back to original state.
-            setBoardConfiguration(state.currentBoard());
+            setBoardConfiguration(state.getCurrentBoard());
 
             // Transition back to the SELECT_MOVE state.
             moveState = MoveState.SELECT_MOVE;
@@ -360,12 +353,12 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                 }
             }
 
-            state.pushBoard(stagedAction, stagedBoard);
+            state.advance(stagedAction, stagedBoard);
 
             // Hide the confirmation UI.
             uiHandler.sendEmptyMessage(PlayerActivity.MESSAGE_HIDE_CONFIRMATION);
 
-            if (!state.currentBoard().isOver()) {
+            if (!state.getCurrentBoard().isOver()) {
                 if (state.getType() instanceof GameType.PassAndPlay) {
                     // Transition back to the SELECT_MOVE state.
                     moveState = MoveState.SELECT_MOVE;
@@ -388,7 +381,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
 
     private void updateCurrentPlayer() {
         uiHandler.sendMessage(uiHandler.obtainMessage(PlayerActivity.MESSAGE_UPDATE_CURRENT_PLAYER,
-                state.currentBoard().getCurrentPlayer()));
+                state.getCurrentBoard().getCurrentPlayer()));
     }
 
     private List<Actor> moveSelectors = new ArrayList<>();
@@ -425,7 +418,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
             stage.addActor(selection);
 
             // Create move markers.
-            for (Action action : state.getRuleset().getActions(state.getBoards())) {
+            for (Action action : state.getRuleset().getActions(state.getHistory())) {
                 if (!piece.getPosition().equals(action.getFrom()))
                     continue;
 

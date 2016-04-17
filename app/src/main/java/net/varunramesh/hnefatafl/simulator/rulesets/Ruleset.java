@@ -3,6 +3,7 @@ package net.varunramesh.hnefatafl.simulator.rulesets;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
+import net.varunramesh.hnefatafl.simulator.History;
 
 import java.util.List;
 import java.util.Set;
@@ -22,14 +23,14 @@ public interface Ruleset {
      * @param eventHandler Optional EventHandler to send events to.
      * @return The new board state.
      */
-    Board step(List<Board> history, Action action, EventHandler eventHandler);
+    Board step(History history, Action action, EventHandler eventHandler);
 
     /**
      * Get a set of all of the valid actions that the current player can take.
      * @param history The history of the game state, as a list of boards.
      * @return The set of legal actions.
      */
-    Set<Action> getActions(List<Board> history);
+    Set<Action> getActions(History history);
 
     /**
      * Get the recommended amount of Plys for the Minimax AI to search on this game type.

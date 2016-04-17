@@ -10,6 +10,7 @@ import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.Direction;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
+import net.varunramesh.hnefatafl.simulator.History;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -88,8 +89,8 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     }
 
     @Override
-    public Board step(List<Board> history, Action action, EventHandler eventHandler) {
-        Board currentBoard = history.get(history.size() - 1);
+    public Board step(History history, Action action, EventHandler eventHandler) {
+        Board currentBoard = history.getCurrentBoard();
 
         // Basic assertions about the current game state.
         Assert.assertEquals("A winner has not yet been set", currentBoard.getWinner(), Winner.UNDETERMINED);
@@ -142,9 +143,8 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     }
 
     @Override
-    public Set<Action> getActions(List<Board> history) {
-        Board currentBoard = history.get(history.size() - 1);
-        return getActions(currentBoard);
+    public Set<Action> getActions(History history) {
+        return getActions(history.getCurrentBoard());
     }
 
     @Override

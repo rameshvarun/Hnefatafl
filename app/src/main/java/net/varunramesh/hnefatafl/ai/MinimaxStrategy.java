@@ -1,11 +1,13 @@
 package net.varunramesh.hnefatafl.ai;
 
+import android.support.v7.internal.widget.ActivityChooserModel;
 import android.util.Log;
 
 import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
+import net.varunramesh.hnefatafl.simulator.History;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -61,8 +63,8 @@ public class MinimaxStrategy implements AIStrategy {
 
 
     @Override
-    public Action decide(List<Board> history, Set<Action> actions) {
-        Board currentBoard = history.get(history.size() - 1);
+    public Action decide(History history, Set<Action> actions) {
+        Board currentBoard = history.getCurrentBoard();
 
         Assert.assertEquals("AI player is current player.", currentBoard.getCurrentPlayer(), player);
         Assert.assertTrue("We need some options to pick from.", ruleset.getActions(history).size() > 0);
@@ -130,17 +132,16 @@ public class MinimaxStrategy implements AIStrategy {
     /** Whether or not to use ALPHA_BETA_PRUNING to prune search paths */
     public static final boolean ALPHA_BETA_PRUNING = true;
 
-    public Result max(List<Board> history, int depth, float alpha, float beta) {
-        Board board = history.get(history.size() - 1);
+    public Result max(History history, int depth, float alpha, float beta) {
+        Board board = history.getCurrentBoard();
         Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result max = null;
         for(Action action : ruleset.getActions(history)) {
             // Simulate a step, and then recurse.
-            history.add(ruleset.step(history, action, null));
-            Result result = min(history, depth - 1, alpha, beta);
-            history.remove(history.size() - 1);
+            Result result = min(history.advance(action, ruleset.step(history, action, null)),
+                    depth - 1, alpha, beta);
 
             if(max == null || result.score > max.score)
                 max = new Result(action, result.score);
@@ -153,17 +154,16 @@ public class MinimaxStrategy implements AIStrategy {
         return max;
     }
 
-    public Result min(List<Board> history, int depth, float alpha, float beta) {
-        Board board = history.get(history.size() - 1);
+    public Result min(History history, int depth, float alpha, float beta) {
+        Board board = history.getCurrentBoard();
         Assert.assertFalse("AI Player is not current player.", board.getCurrentPlayer() == player);
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result min = null;
         for(Action action : ruleset.getActions(history)) {
             // Simulate a step, and then recurse.
-            history.add(ruleset.step(history, action, null));
-            Result result = max(history, depth - 1, alpha, beta);
-            history.remove(history.size() - 1);
+            Result result = max(history.advance(action, ruleset.step(history, action, null)),
+                    depth - 1, alpha, beta);
 
             if(min == null || result.score < min.score)
                 min = new Result(action, result.score);

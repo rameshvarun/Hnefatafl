@@ -316,7 +316,7 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
         }
 
         // Select the current player
-        updateCurrentPlayer(gameState.currentBoard().getCurrentPlayer());
+        updateCurrentPlayer(gameState.getCurrentBoard().getCurrentPlayer());
 
         hideMoveConfirmation();
     }

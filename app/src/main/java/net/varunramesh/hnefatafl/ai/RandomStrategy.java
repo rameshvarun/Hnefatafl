@@ -1,7 +1,10 @@
 package net.varunramesh.hnefatafl.ai;
 
+import junit.framework.Assert;
+
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
+import net.varunramesh.hnefatafl.simulator.History;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,8 +19,8 @@ public class RandomStrategy implements AIStrategy {
     private final Random random = new Random();
 
     @Override
-    public Action decide(List<Board> history, Set<Action> actions) {
-        assert actions.size() > 0;
+    public Action decide(History history, Set<Action> actions) {
+        Assert.assertTrue("Actions set must not be empty.", actions.size() > 0);
         List<Action> list = new ArrayList<>(actions);
         return list.get(random.nextInt(actions.size()));
     }

@@ -6,6 +6,7 @@ import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
+import net.varunramesh.hnefatafl.simulator.History;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -56,8 +57,8 @@ public class UCTStrategy implements AIStrategy {
     private final AtomicInteger plays = new AtomicInteger();
 
     @Override
-    public Action decide(List<Board> history, Set<Action> actions) {
-        Board currentBoard = history.get(history.size() - 1);
+    public Action decide(History history, Set<Action> actions) {
+        Board currentBoard = history.getCurrentBoard();
         Assert.assertEquals("AI player is current player.", currentBoard.getCurrentPlayer(), player);
         Assert.assertTrue("We need some options to pick from.", ruleset.getActions(history).size() > 0);
 

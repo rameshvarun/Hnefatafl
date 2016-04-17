@@ -21,11 +21,8 @@ public class GameState implements Serializable {
     /** A GameType instance */
     private final GameType type;
 
-    /** The entire board history of the match */
-    private final List<Board> boards = new LinkedList<>();
-
-    /** The action history of the match */
-    private final List<Action> actions = new LinkedList<>();
+    /** The entire history of the match, containing boards and actions that have been taken. */
+    private History history;
 
     /** The Ruleset that this match uses */
     private final Ruleset ruleset;
@@ -49,7 +46,7 @@ public class GameState implements Serializable {
 
     public GameState(GameType type, Ruleset ruleset) {
         this.type = type;
-        this.boards.add(ruleset.getStartingConfiguration());
+        this.history = new History(ruleset.getStartingConfiguration());
         this.uuid = UUID.randomUUID();
         this.ruleset = ruleset;
 
@@ -57,17 +54,18 @@ public class GameState implements Serializable {
         this.lastMoveDate = new Date();
     }
 
+    /** Get the list of boards. */
+    public History getHistory() { return history; }
+
+    /**
+     * Returns the current board.
+     * @return The board object.
+     */
+    public Board getCurrentBoard() { return history.getCurrentBoard(); }
+
     /** Returns true if no moves have been made yet */
-    public boolean isFirstMove() { return actions.size() == 0; }
+    public boolean isFirstMove() { return history.isFirstMove(); }
 
-    /** The current configuration of the board */
-    public Board currentBoard() { return boards.get(boards.size() - 1); }
-
-    /** Get the list of boards */
-    public List<Board> getBoards() { return new LinkedList<>(boards); }
-
-    /** Get the list of actions */
-    public List<Action> getActions() { return new LinkedList<>(actions); }
 
     /**
      * Push an action and it's resulting board onto the game's history. If this GameState object
@@ -75,10 +73,9 @@ public class GameState implements Serializable {
      * @param action The action that the current player has just finalized.
      * @param board The new state of the board that resulted from that action.
      */
-    public void pushBoard(Action action, Board board) {
+    public void advance(Action action, Board board) {
         // Push the new board, and the action that got us there.
-        this.actions.add(action);
-        this.boards.add(board);
+        this.history = history.advance(action, board);
 
         // Save the current time.
         this.lastMoveDate = new Date();
