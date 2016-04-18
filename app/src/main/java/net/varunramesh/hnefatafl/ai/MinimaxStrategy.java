@@ -86,7 +86,7 @@ public class MinimaxStrategy implements AIStrategy {
     }
 
     public static float WIN_SCORE = 1000.0f;
-    public static float LOSE_SCORE = 100.0f;
+    public static float LOSE_SCORE = -1000.0f;
 
     /** Evaluate how good the board for us */
     public float eval(History history) {

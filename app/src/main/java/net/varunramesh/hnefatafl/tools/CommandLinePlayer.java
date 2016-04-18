@@ -1,5 +1,6 @@
 package net.varunramesh.hnefatafl.tools;
 
+import net.varunramesh.hnefatafl.Mutable;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
@@ -11,15 +12,18 @@ import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
 import net.varunramesh.hnefatafl.simulator.Winner;
+import net.varunramesh.hnefatafl.simulator.rulesets.Brandubh;
 import net.varunramesh.hnefatafl.simulator.rulesets.FeltarHnefatafl;
 import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
 
 import java.io.BufferedReader;
+import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.SynchronousQueue;
 
 /**
@@ -33,46 +37,112 @@ public class CommandLinePlayer {
         return Character.toString(Character.toChars(65 + pos.getY())[0]) + (BOARD_SIZE - pos.getX());
     }
 
+    public static Position parsePosition(String posStr) {
+        int y = (int)posStr.charAt(0) - 65;
+        int x = BOARD_SIZE - Integer.parseInt(posStr.substring(1));
+        return new Position(x, y);
+    }
+
     public static void main(String[] args) {
         System.out.println("Hnefatafl command-line player.");
-        Ruleset ruleset = new FeltarHnefatafl();
 
-        History history = new History(ruleset.getStartingConfiguration());
-        BOARD_SIZE = history.getCurrentBoard().getBoardSize();
+        AIStrategy playerStrategy = new AIStrategy() {
+            @Override
+            public Action decide(History history, Set<Action> actions) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                while(true) {
+                    System.out.print("(Your Move) > ");
+                    String move = null;
+                    try {
+                        move = br.readLine();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.exit(1);
+                    }
 
-        // Display the initial board.
-        printBoard(history.getCurrentBoard());
+                    StringTokenizer st = new StringTokenizer(move);
+                    if (st.countTokens() != 3) {
+                        System.out.println("Tokenizer expected three tokens.");
+                        continue;
+                    }
 
-        AIStrategy attackerStrategy = null; // new RandomStrategy();
-        AIStrategy defenderStrategy = null; //new MinimaxStrategy(ruleset, Player.DEFENDER, 4);
+                    Position from = parsePosition(st.nextToken());
+                    st.nextToken();
+                    Position to = parsePosition(st.nextToken());
+
+                    System.out.print(formatPosition(from) + " " + formatPosition(to));
+
+                    for (Action action : actions) {
+                        if (action.getFrom().equals(from) && action.getTo().equals(to))
+                            return action;
+                    }
+                    System.out.println("Action is not a valid move.");
+                }
+            }
+        };
+
+        Ruleset ruleset = null;
+        AIStrategy attackerStrategy = null;
+        AIStrategy defenderStrategy = null;
+        History history = null;
 
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("Pick a strategy for the attacker ('random', 'minimax', or 'player'):\n> ");
-            String answer = br.readLine();
+            System.out.println("Type three characters. The first character is the ruleset - (F)etlar or (B)randubh.");
+            System.out.println("The second character is the attacker's strategy - (R)andom, (M)inimax, or (P)layer.");
+            System.out.println("The third character is the defender's strategy - (R)andom, (M)inimax, or (P)layer.");
 
-            if (answer.toLowerCase().equals("random")) {
-                attackerStrategy = new RandomStrategy();
-            } else if (answer.toLowerCase().equals("minimax")) {
-                attackerStrategy = new MinimaxStrategy(ruleset, Player.ATTACKER, 4);
-            } else {
-                throw new UnsupportedOperationException();
+            System.out.print("> ");
+            String answer = br.readLine().toLowerCase();
+
+            switch (answer.charAt(0)) {
+                case 'f':
+                    ruleset = new FeltarHnefatafl();
+                    break;
+                case 'b':
+                    ruleset = new Brandubh();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
 
-            System.out.print("Pick a strategy for the defender ('random', 'minimax', or 'player'):\n> ");
-            answer = br.readLine();
+            history = new History(ruleset.getStartingConfiguration());
+            BOARD_SIZE = history.getCurrentBoard().getBoardSize();
 
-            if (answer.toLowerCase().equals("random")) {
-                defenderStrategy = new RandomStrategy();
-            } else if (answer.toLowerCase().equals("minimax")) {
-                defenderStrategy = new MinimaxStrategy(ruleset, Player.DEFENDER, 4);
-            } else {
-                throw new UnsupportedOperationException();
+            switch (answer.charAt(1)) {
+                case 'r':
+                    attackerStrategy = new RandomStrategy();
+                    break;
+                case 'm':
+                    attackerStrategy = new MinimaxStrategy(ruleset, Player.ATTACKER, 4);
+                    break;
+                case 'p':
+                    attackerStrategy = playerStrategy;
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+
+            switch (answer.charAt(2)) {
+                case 'r':
+                    defenderStrategy = new RandomStrategy();
+                    break;
+                case 'm':
+                    defenderStrategy = new MinimaxStrategy(ruleset, Player.DEFENDER, 4);
+                    break;
+                case 'p':
+                    defenderStrategy = playerStrategy;
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
+
+        // Display the initial board.
+        printBoard(history.getCurrentBoard());
 
 
         EventHandler eventHandler = new EventHandler() {
