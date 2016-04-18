@@ -24,7 +24,7 @@ import java.util.Set;
 public class MinimaxStrategy implements AIStrategy {
     private final String TAG = "MinimaxStrategy";
 
-    /** Helper class the represents a (action, score) tuple */
+    /** Helper class that represents a (action, score) tuple */
     public static final class Result {
         public final Action action;
         public final float score;
@@ -85,15 +85,20 @@ public class MinimaxStrategy implements AIStrategy {
         return action;
     }
 
+    public static float WIN_SCORE = 1000.0f;
+    public static float LOSE_SCORE = 100.0f;
+
     /** Evaluate how good the board for us */
-    public float eval(Board board) {
+    public float eval(History history) {
         ++leaves; // Evaling a board means we have reached a leaf.
+        Board board = history.getCurrentBoard();
 
         // If the game already has a winner, then return -infinity or infinity
         if(board.isOver()) {
             if(board.getWinner() == Winner.DRAW) return 0;
-            else return board.getWinner() == Winner.fromPlayer(player)
-                    ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+            else return board.getWinner().equals(Winner.fromPlayer(player))
+                    ? WIN_SCORE - history.size() // Penalize the win by match size, so that the MiniMax search prefers immediate wins.
+                    : LOSE_SCORE; // A loss is always a loss.
         }
 
         float score = 0.0f;
@@ -135,7 +140,7 @@ public class MinimaxStrategy implements AIStrategy {
     public Result max(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
         assert board.getCurrentPlayer().equals(player) : "AI player is current player.";
-        if(board.isOver() || depth == 0) return new Result(null, eval(board));
+        if(board.isOver() || depth == 0) return new Result(null, eval(history));
 
         Result max = null;
         for(Action action : ruleset.getActions(history)) {
@@ -157,7 +162,7 @@ public class MinimaxStrategy implements AIStrategy {
     public Result min(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
         assert !board.getCurrentPlayer().equals(player) : "AI Player is not current player.";
-        if(board.isOver() || depth == 0) return new Result(null, eval(board));
+        if(board.isOver() || depth == 0) return new Result(null, eval(history));
 
         Result min = null;
         for(Action action : ruleset.getActions(history)) {

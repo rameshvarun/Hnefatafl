@@ -80,4 +80,7 @@ public final class History implements Serializable {
         this.boards = ConsPStack.from((LinkedList<Board>) stream.readObject());
         this.actions = ConsPStack.from((LinkedList<Action>) stream.readObject());
     }
+
+    /** Returns the number of boards that comprise this history. */
+    public int size() { return boards.size(); };
 }
