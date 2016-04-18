@@ -2,9 +2,11 @@ package net.varunramesh.hnefatafl.simulator;
 
 import java.io.Serializable;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,12 +37,12 @@ public final class Grid implements Serializable {
     }
 
     /** The cached entry set. This is null until the first call to entries. */
-    private transient Set<Map.Entry<Position, Piece>> entries = null;
+    private transient List<Map.Entry<Position, Piece>> entries = null;
 
-    public Set<Map.Entry<Position, Piece>> getEntries() {
+    public List<Map.Entry<Position, Piece>> getEntries() {
         if (entries == null) {
             // First, construct a mutable set, and add in all of the (Position, Piece) tuples.
-            Set<Map.Entry<Position, Piece>> mutableEntries = new HashSet<>();
+            List<Map.Entry<Position, Piece>> mutableEntries = new ArrayList<>();
             for (int i = 0; i < pieces.length; ++i) {
                 if (pieces[i] != null)
                     mutableEntries.add(new AbstractMap.SimpleImmutableEntry<Position, Piece>(
@@ -48,7 +50,7 @@ public final class Grid implements Serializable {
             }
 
             // Make the set unmodifiable now.
-            entries = Collections.unmodifiableSet(mutableEntries);
+            entries = Collections.unmodifiableList(mutableEntries);
         }
 
         return entries;
