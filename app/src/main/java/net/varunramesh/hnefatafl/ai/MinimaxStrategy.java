@@ -66,19 +66,19 @@ public class MinimaxStrategy implements AIStrategy {
     public Action decide(History history, Set<Action> actions) {
         Board currentBoard = history.getCurrentBoard();
 
-        Assert.assertEquals("AI player is current player.", currentBoard.getCurrentPlayer(), player);
-        Assert.assertTrue("We need some options to pick from.", ruleset.getActions(history).size() > 0);
+        assert currentBoard.getCurrentPlayer().equals(player) : "AI player is current player.";
+        assert ruleset.getActions(history).size() > 0 : "We need some options to pick from.";
 
         // Clear leaves count.
         leaves = 0;
 
-        Log.d(TAG, "Starting a Minimax search with depth " + searchDepth + ".");
+        System.out.println(TAG + ": Starting a Minimax search with depth " + searchDepth + ".");
         Action action = max(history, searchDepth, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY).action;
-        Log.d(TAG, "MinimaxStrategy searched " + leaves + " possible game states.");
+        System.out.println(TAG + ": MinimaxStrategy searched " + leaves + " possible game states.");
 
         // Should never happen, but to prevent crashes.
         if (action == null) {
-            Log.wtf(TAG, "MinimaxStrategy returned null action. Falling back to RandomStrategy.");
+            System.err.print(TAG + ": MinimaxStrategy returned null action. Falling back to RandomStrategy.");
             return new RandomStrategy().decide(history, actions);
         }
 
@@ -134,7 +134,7 @@ public class MinimaxStrategy implements AIStrategy {
 
     public Result max(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
-        Assert.assertEquals("AI player is current player.", board.getCurrentPlayer(), player);
+        assert board.getCurrentPlayer().equals(player) : "AI player is current player.";
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result max = null;
@@ -156,7 +156,7 @@ public class MinimaxStrategy implements AIStrategy {
 
     public Result min(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
-        Assert.assertFalse("AI Player is not current player.", board.getCurrentPlayer() == player);
+        assert !board.getCurrentPlayer().equals(player) : "AI Player is not current player.";
         if(board.isOver() || depth == 0) return new Result(null, eval(board));
 
         Result min = null;

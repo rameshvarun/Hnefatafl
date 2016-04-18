@@ -93,9 +93,9 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         Board currentBoard = history.getCurrentBoard();
 
         // Basic assertions about the current game state.
-        Assert.assertEquals("A winner has not yet been set", currentBoard.getWinner(), Winner.UNDETERMINED);
-        Assert.assertEquals("The provided action is for the currently active player.", action.getPlayer(), currentBoard.getCurrentPlayer());
-        Assert.assertNotNull("Action is non-null.", action);
+        assert currentBoard.getWinner().equals(Winner.UNDETERMINED) : "A winner has not yet been set";
+        assert action.getPlayer().equals(currentBoard.getCurrentPlayer()) : "The provided action is for the currently active player.";
+        assert action != null : "Action is non-null.";
 
         // TODO: Probably verify move and complain if it's illegal.
         // for now, assume that the move was given by us, and is thus valid.
@@ -170,15 +170,16 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
 
     private static Direction[] directions = Direction.values();
 
-    /** Helper function: Get all of the actions that the piece at the given position can take */
+    /** Helper function: Get all of the actions that the piece at the given position can take. Add
+     * it to the provided set. */
     private void addActionsForPiece(Board board, Position position, Set<Action> actions) {
         PMap<Position, Piece> pieces = board.getPieces();
         Player currentPlayer = board.getCurrentPlayer();
 
-        Assert.assertTrue(pieces.containsKey(position));
+        assert pieces.containsKey(position) : "The board must have a piece at the requested position.";
 
         Piece piece = pieces.get(position);
-        Assert.assertTrue(currentPlayer.ownsPiece(piece));
+        assert currentPlayer.ownsPiece(piece) : "The current player must own the piece that we are finding moves for.";
 
         for(Direction dir : directions) {
             for(Position pos = position.getNeighbor(dir); board.contains(pos); pos = pos.getNeighbor(dir)) {

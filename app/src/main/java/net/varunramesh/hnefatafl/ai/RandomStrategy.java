@@ -20,7 +20,7 @@ public class RandomStrategy implements AIStrategy {
 
     @Override
     public Action decide(History history, Set<Action> actions) {
-        Assert.assertTrue("Actions set must not be empty.", actions.size() > 0);
+        assert actions.size() > 0 : "Actions set must not be empty.";
         List<Action> list = new ArrayList<>(actions);
         return list.get(random.nextInt(actions.size()));
     }
