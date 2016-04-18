@@ -103,7 +103,7 @@ public class MinimaxStrategy implements AIStrategy {
         float score = 0.0f;
 
         // Start by counting how many pieces each player has.
-        for (Map.Entry<Position, Piece> piece : board.getPieces().entrySet()) {
+        for (Map.Entry<Position, Piece> piece : board.getPieces().getEntries()) {
             if(player.ownsPiece(piece.getValue()))
                 score += 1.0f;
             else

@@ -98,7 +98,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Assert.assertEquals("We should be in the AI_MOVE state before taking an AI move.", moveState, MoveState.AI_MOVE);
 
         final Player aiPlayer = ((GameType.PlayerVsAI) state.getType()).getAIPlayer();
-        final AIStrategy strategy = new MinimaxStrategy(state.getRuleset(), aiPlayer);
+        final AIStrategy strategy = new MinimaxStrategy(state.getRuleset(), aiPlayer, 2);
 
         final FutureTask<Action> aiTask = new FutureTask<Action>(() -> {
             // Decide the next move
@@ -447,7 +447,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         pieceActors.clear();
 
         // Add in the new actors.
-        for(Map.Entry<Position, Piece> piece : board.getPieces().entrySet()) {
+        for(Map.Entry<Position, Piece> piece : board.getPieces().getEntries()) {
             PieceActor actor = new PieceActor(this, piece.getValue(), piece.getKey());
             stage.addActor(actor);
             pieceActors.add(actor);

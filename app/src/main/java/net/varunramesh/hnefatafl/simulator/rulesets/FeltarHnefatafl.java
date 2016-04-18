@@ -10,6 +10,7 @@ import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
 import net.varunramesh.hnefatafl.simulator.Direction;
 import net.varunramesh.hnefatafl.simulator.EventHandler;
+import net.varunramesh.hnefatafl.simulator.Grid;
 import net.varunramesh.hnefatafl.simulator.History;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
@@ -85,7 +86,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         pieces.put(new Position(7, 10), Piece.ATTACKER);
         pieces.put(new Position(5, 9), Piece.ATTACKER);
 
-        return new Board(HashTreePMap.from(pieces), Player.ATTACKER, Winner.UNDETERMINED, BOARD_SIZE);
+        return new Board(new Grid(BOARD_SIZE).add(pieces), Player.ATTACKER, Winner.UNDETERMINED, BOARD_SIZE);
     }
 
     @Override
@@ -101,19 +102,19 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         // for now, assume that the move was given by us, and is thus valid.
 
         // Move the piece.
-        PMap<Position, Piece> pieces = currentBoard.getPieces();
+        Grid pieces = currentBoard.getPieces();
         Piece piece = pieces.get(action.getFrom());
-        PMap<Position, Piece> newPieces = pieces.minus(action.getFrom());
-        newPieces = newPieces.plus(action.getTo(), piece);
+        Grid newPieces = pieces.remove(action.getFrom());
+        newPieces = newPieces.add(action.getTo(), piece);
         if(eventHandler != null) eventHandler.movePiece(action.getFrom(), action.getTo());
 
         // Look to see if any adjacent opposing piece has been sandwiched.
         for(Direction dir : directions) {
             final Position pos = action.getTo().getNeighbor(dir);
-            if(newPieces.containsKey(pos)) {
+            if(newPieces.inBounds(pos) && newPieces.pieceAt(pos)) {
                 Piece adjacentPiece = newPieces.get(pos);
                 if(adjacentPiece.hostileTo(piece) && isCaptured(currentBoard, newPieces, pos, action.getTo())) {
-                    newPieces = newPieces.minus(pos);
+                    newPieces = newPieces.remove(pos);
                     if(eventHandler != null) eventHandler.removePiece(pos);
                 }
             }
@@ -160,7 +161,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
 
         // Add all of the actions for pieces that the current player owns.
         Player currentPlayer = currentBoard.getCurrentPlayer();
-        for(Map.Entry<Position, Piece> piece : currentBoard.getPieces().entrySet()) {
+        for(Map.Entry<Position, Piece> piece : currentBoard.getPieces().getEntries()) {
             if (currentPlayer.ownsPiece(piece.getValue()))
                 addActionsForPiece(currentBoard, piece.getKey(), actions);
         }
@@ -173,17 +174,17 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     /** Helper function: Get all of the actions that the piece at the given position can take. Add
      * it to the provided set. */
     private void addActionsForPiece(Board board, Position position, Set<Action> actions) {
-        PMap<Position, Piece> pieces = board.getPieces();
+        Grid grid = board.getPieces();
         Player currentPlayer = board.getCurrentPlayer();
 
-        assert pieces.containsKey(position) : "The board must have a piece at the requested position.";
+        assert grid.pieceAt(position) : "The board must have a piece at the requested position.";
 
-        Piece piece = pieces.get(position);
+        Piece piece = grid.get(position);
         assert currentPlayer.ownsPiece(piece) : "The current player must own the piece that we are finding moves for.";
 
         for(Direction dir : directions) {
-            for(Position pos = position.getNeighbor(dir); board.contains(pos); pos = pos.getNeighbor(dir)) {
-                if(pieces.containsKey(pos)) break;
+            for(Position pos = position.getNeighbor(dir); grid.inBounds(pos); pos = pos.getNeighbor(dir)) {
+                if(grid.pieceAt(pos)) break;
                 else {
                     if(piece != Piece.KING && isKingOnlySquare(pos))
                         continue;
@@ -203,31 +204,31 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     }
 
     public boolean kingInRefugeeSquare(Board board) {
-        PMap<Position, Piece> pieces = board.getPieces();
+        Grid pieces = board.getPieces();
         return Stream.of(board.getCornerSquares()).anyMatch((Position pos) -> {
-            return pieces.containsKey(pos) && pieces.get(pos) == Piece.KING;
+            return pieces.inBounds(pos) && pieces.pieceAt(pos) && pieces.get(pos) == Piece.KING;
         });
     }
 
-    public static boolean isCaptured(Board board, PMap<Position, Piece> pieces, Position defendingPos, Position attackingPos) {
+    public static boolean isCaptured(Board board, Grid pieces, Position defendingPos, Position attackingPos) {
         final Piece piece = pieces.get(defendingPos);
         switch (piece) {
             case KING:
                 return Stream.of(Direction.values()).allMatch((Direction dir) -> {
                     // The King is only sandwiched when all four s
                     Position adjacent = defendingPos.getNeighbor(dir);
-                    return pieces.containsKey(adjacent) && pieces.get(adjacent).hostileTo(piece);
+                    return pieces.inBounds(adjacent) && pieces.pieceAt(adjacent)  && pieces.get(adjacent).hostileTo(piece);
                 });
             case ATTACKER: {
                 Position oppositePos = defendingPos.getNeighbor(defendingPos.directionTo(attackingPos).opposite());
                 return board.getCenterSquare().equals(oppositePos)
                         || board.getCornerSquares().contains(oppositePos)
-                        || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
+                        || (pieces.inBounds(oppositePos) && pieces.pieceAt(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
             }
             case DEFENDER: {
                 Position oppositePos = defendingPos.getNeighbor(defendingPos.directionTo(attackingPos).opposite());
                 return board.getCornerSquares().contains(oppositePos)
-                        || (pieces.containsKey(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
+                        || (pieces.inBounds(oppositePos) && pieces.pieceAt(oppositePos) && pieces.get(oppositePos).hostileTo(piece));
             }
         }
         return true;

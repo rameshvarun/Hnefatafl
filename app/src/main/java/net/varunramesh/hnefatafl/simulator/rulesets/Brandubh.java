@@ -1,6 +1,7 @@
 package net.varunramesh.hnefatafl.simulator.rulesets;
 
 import net.varunramesh.hnefatafl.simulator.Board;
+import net.varunramesh.hnefatafl.simulator.Grid;
 import net.varunramesh.hnefatafl.simulator.Piece;
 import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
@@ -42,7 +43,7 @@ public class Brandubh extends FeltarHnefatafl {
         pieces.put(new Position(3, 5), Piece.ATTACKER);
         pieces.put(new Position(3, 6), Piece.ATTACKER);
 
-        return new Board(HashTreePMap.from(pieces), Player.ATTACKER, Winner.UNDETERMINED, BOARD_SIZE);
+        return new Board(new Grid(BOARD_SIZE).add(pieces), Player.ATTACKER, Winner.UNDETERMINED, BOARD_SIZE);
     }
 
     @Override

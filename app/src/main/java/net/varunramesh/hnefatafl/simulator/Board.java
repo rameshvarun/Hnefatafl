@@ -26,41 +26,13 @@ public final class Board implements Serializable {
     private static final String TAG = "Board";
 
     /* Instance Variables. Would Be final if not for the need for custom serialization logic. */
-    private PMap<Position, Piece> pieces;
+    private Grid pieces;
     private Player currentPlayer;
     private Winner winner;
     private int boardSize;
 
-    /** Serialize the object to a stream. */
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeInt(boardSize);
-        out.writeObject(currentPlayer);
-        out.writeObject(winner);
-        out.writeInt(pieces.size());
-        for(Map.Entry<Position, Piece> entry : pieces.entrySet()) {
-            out.writeObject(entry.getKey());
-            out.writeObject(entry.getValue());
-        }
-    }
-
-    /** Deserialize the object from a stream */
-    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        this.boardSize = stream.readInt();
-        this.currentPlayer = (Player)stream.readObject();
-        this.winner = (Winner)stream.readObject();
-
-        Map<Position, Piece> pieces = new HashMap<Position, Piece>();
-        int size = stream.readInt();
-        for(int i = 0; i < size; ++i) {
-            Position key = (Position)stream.readObject();
-            Piece value = (Piece)stream.readObject();
-            pieces.put(key, value);
-        }
-        this.pieces = HashTreePMap.from(pieces);
-    }
-
     /** Instantiate a board with the given values */
-    public Board(PMap<Position, Piece> pieces, Player currentPlayer, Winner winner, int boardSize) {
+    public Board(Grid pieces, Player currentPlayer, Winner winner, int boardSize) {
         this.pieces = pieces;
         this.currentPlayer = currentPlayer;
         this.winner = winner;
@@ -68,7 +40,7 @@ public final class Board implements Serializable {
     }
 
     /** Get the number of pieces currently on the board */
-    public int getNumberOfPieces() { return pieces.size(); }
+    public int getNumberOfPieces() { return pieces.getNumberOfPieces(); }
 
     /** Get the size of the board. Can safely assume that the board is allways a square */
     public int getBoardSize() { return boardSize; }
@@ -80,7 +52,7 @@ public final class Board implements Serializable {
     public Player getCurrentPlayer() { return currentPlayer; }
 
     /** Return an immutable map of all of the piece locations */
-    public PMap<Position, Piece> getPieces() { return pieces; }
+    public Grid getPieces() { return pieces; }
 
     /** Return true if the winner of the match has been determined. */
     public boolean isOver() { return winner != Winner.UNDETERMINED; }
@@ -93,12 +65,7 @@ public final class Board implements Serializable {
 
     /** Get all of the positions of the pieces of a certain type */
     public Set<Position> getPositionsOfPiece(Piece type) {
-        Set<Position> pieces = new HashSet<>();
-        for (Map.Entry<Position, Piece> piece : getPieces().entrySet()) {
-            if (piece.getValue().equals(type))
-                pieces.add(piece.getKey());
-        }
-        return pieces;
+        return pieces.getPositionsOfPiece(type);
     }
 
     /** Return the center square. */

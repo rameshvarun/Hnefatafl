@@ -4,9 +4,9 @@ package net.varunramesh.hnefatafl.simulator;
 import java.io.Serializable;
 
 /**
- * Represents an action that a player can take.
+ * Immutable class that represents an action a player can take.
  */
-public class Action implements Serializable {
+public final class Action implements Serializable {
     /** The player that is making this move. */
     private final Player player;
 
