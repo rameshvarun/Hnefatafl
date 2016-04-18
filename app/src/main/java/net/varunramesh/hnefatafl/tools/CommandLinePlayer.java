@@ -3,6 +3,7 @@ package net.varunramesh.hnefatafl.tools;
 import net.varunramesh.hnefatafl.Mutable;
 import net.varunramesh.hnefatafl.ai.AIStrategy;
 import net.varunramesh.hnefatafl.ai.MinimaxStrategy;
+import net.varunramesh.hnefatafl.ai.MonteCarloStrategy;
 import net.varunramesh.hnefatafl.ai.RandomStrategy;
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
@@ -89,8 +90,8 @@ public class CommandLinePlayer {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("Type three characters. The first character is the ruleset - (F)etlar or (B)randubh.");
-            System.out.println("The second character is the attacker's strategy - (R)andom, (M)inimax, or (P)layer.");
-            System.out.println("The third character is the defender's strategy - (R)andom, (M)inimax, or (P)layer.");
+            System.out.println("The second character is the attacker's strategy - (R)andom, (M)inimax, (C)MonteCarlo, or (P)layer.");
+            System.out.println("The third character is the defender's strategy - (R)andom, (M)inimax, (C)MonteCarlo, or (P)layer.");
 
             System.out.print("> ");
             String answer = br.readLine().toLowerCase();
@@ -116,6 +117,9 @@ public class CommandLinePlayer {
                 case 'm':
                     attackerStrategy = new MinimaxStrategy(ruleset, Player.ATTACKER, 4);
                     break;
+                case 'c':
+                    attackerStrategy = new MonteCarloStrategy(ruleset, Player.ATTACKER);
+                    break;
                 case 'p':
                     attackerStrategy = playerStrategy;
                     break;
@@ -130,6 +134,9 @@ public class CommandLinePlayer {
                 case 'm':
                     defenderStrategy = new MinimaxStrategy(ruleset, Player.DEFENDER, 4);
                     break;
+                case 'c':
+                    defenderStrategy = new MonteCarloStrategy(ruleset, Player.DEFENDER);
+                    break;
                 case 'p':
                     defenderStrategy = playerStrategy;
                     break;
@@ -143,7 +150,6 @@ public class CommandLinePlayer {
 
         // Display the initial board.
         printBoard(history.getCurrentBoard());
-
 
         EventHandler eventHandler = new EventHandler() {
             @Override
@@ -173,13 +179,6 @@ public class CommandLinePlayer {
 
             history = history.advance(action, ruleset.step(history, action, eventHandler));
             printBoard(history.getCurrentBoard());
-
-            System.out.print("Press enter to contine...");
-            try {
-                System.in.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
         if (history.getCurrentBoard().getWinner() == Winner.DRAW) {

@@ -8,3 +8,4 @@
 app/app-release.apk
 *.iml
 .idea/
+*.jfr

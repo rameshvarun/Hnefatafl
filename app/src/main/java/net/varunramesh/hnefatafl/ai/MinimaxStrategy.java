@@ -88,9 +88,8 @@ public class MinimaxStrategy implements AIStrategy {
     public static float WIN_SCORE = 1000.0f;
     public static float LOSE_SCORE = -1000.0f;
 
-    /** Evaluate how good the board for us */
-    public float eval(History history) {
-        ++leaves; // Evaling a board means we have reached a leaf.
+    /** Evaluate how good the board for the given player. */
+    public static float eval(History history, Player player) {
         Board board = history.getCurrentBoard();
 
         // If the game already has a winner, then return -infinity or infinity
@@ -140,7 +139,10 @@ public class MinimaxStrategy implements AIStrategy {
     public Result max(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
         assert board.getCurrentPlayer().equals(player) : "AI player is current player.";
-        if(board.isOver() || depth == 0) return new Result(null, eval(history));
+        if(board.isOver() || depth == 0) {
+            ++leaves; // We've reached a leaf.
+            return new Result(null, eval(history, player));
+        }
 
         Result max = null;
         for(Action action : ruleset.getActions(history)) {
@@ -162,7 +164,10 @@ public class MinimaxStrategy implements AIStrategy {
     public Result min(History history, int depth, float alpha, float beta) {
         Board board = history.getCurrentBoard();
         assert !board.getCurrentPlayer().equals(player) : "AI Player is not current player.";
-        if(board.isOver() || depth == 0) return new Result(null, eval(history));
+        if(board.isOver() || depth == 0) {
+            ++leaves; // We've reached a leaf.
+            return new Result(null, eval(history, player));
+        }
 
         Result min = null;
         for(Action action : ruleset.getActions(history)) {
