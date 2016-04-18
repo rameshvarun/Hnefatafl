@@ -49,7 +49,7 @@ public class CommandLinePlayer {
 
         AIStrategy playerStrategy = new AIStrategy() {
             @Override
-            public Action decide(History history, Set<Action> actions) {
+            public Action decide(History history, List<Action> actions) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 while(true) {
                     System.out.print("(Your Move) > ");
@@ -169,7 +169,7 @@ public class CommandLinePlayer {
         };
 
         while (!history.getCurrentBoard().isOver()) {
-            Set<Action> actions = ruleset.getActions(history);
+            List<Action> actions = ruleset.getActions(history);
 
             Action action = null;
             if (history.getCurrentBoard().getCurrentPlayer() == Player.ATTACKER)

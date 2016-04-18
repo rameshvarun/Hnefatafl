@@ -63,7 +63,7 @@ public class MinimaxStrategy implements AIStrategy {
 
 
     @Override
-    public Action decide(History history, Set<Action> actions) {
+    public Action decide(History history, List<Action> actions) {
         Board currentBoard = history.getCurrentBoard();
 
         assert currentBoard.getCurrentPlayer().equals(player) : "AI player is current player.";

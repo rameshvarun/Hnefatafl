@@ -30,7 +30,7 @@ public interface Ruleset {
      * @param history The history of the game state, as a list of boards.
      * @return The set of legal actions.
      */
-    Set<Action> getActions(History history);
+    List<Action> getActions(History history);
 
     /**
      * Get the recommended amount of Plys for the Minimax AI to search on this game type.

@@ -7,6 +7,7 @@ import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Winner;
 import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,7 @@ public class MonteCarloStrategy implements AIStrategy {
     private final Random random = new Random();
 
     @Override
-    public Action decide(History history, Set<Action> actionsSet) {
+    public Action decide(History history, List<Action> actionsSet) {
         Board currentBoard = history.getCurrentBoard();
         assert currentBoard.getCurrentPlayer().equals(player) : "AI player is current player.";
         assert ruleset.getActions(history).size() > 0 : "We need some options to pick from.";
@@ -62,7 +63,7 @@ public class MonteCarloStrategy implements AIStrategy {
             History current = history.advance(actions[currentAction],
                     ruleset.step(history, actions[currentAction], null));
             while (!current.getCurrentBoard().isOver()) {
-                Set<Action> probeActionsSet = ruleset.getActions(current);
+                List<Action> probeActionsSet = ruleset.getActions(current);
                 Action[] probeActions = probeActionsSet.toArray(new Action[probeActionsSet.size()]);
                 Action probeAction = probeActions[random.nextInt(probeActions.length)];
 

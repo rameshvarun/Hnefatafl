@@ -1,10 +1,6 @@
 package net.varunramesh.hnefatafl.simulator.rulesets;
 
-import android.util.LruCache;
-
 import com.annimon.stream.Stream;
-
-import junit.framework.Assert;
 
 import net.varunramesh.hnefatafl.simulator.Action;
 import net.varunramesh.hnefatafl.simulator.Board;
@@ -17,15 +13,12 @@ import net.varunramesh.hnefatafl.simulator.Player;
 import net.varunramesh.hnefatafl.simulator.Position;
 import net.varunramesh.hnefatafl.simulator.Winner;
 
-import org.pcollections.HashTreePMap;
-import org.pcollections.PMap;
-
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Varun on 8/17/2015.
@@ -132,7 +125,7 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         } else {
             // If the next board would result in that player having no actions, then
             // the current player has won.
-            if(getActions(tempBoard).size() == 0) {
+            if(getActionsForBoard(tempBoard).size() == 0) {
                 winner = Winner.fromPlayer(currentBoard.getCurrentPlayer());
             }
         }
@@ -143,9 +136,8 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
         return new Board(newPieces, currentBoard.getCurrentPlayer().other(), winner, currentBoard.getBoardSize());
     }
 
-    @Override
-    public Set<Action> getActions(History history) {
-        return getActions(history.getCurrentBoard());
+    public List<Action> getActions(History history) {
+        return getActionsForBoard(history.getCurrentBoard());
     }
 
     @Override
@@ -154,9 +146,9 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     }
 
 
-    private Set<Action> getActions(Board currentBoard) {
+    private List<Action> getActionsForBoard(Board currentBoard) {
         // If the game is over, return the empty set.
-        Set<Action> actions = new HashSet<>();
+        List<Action> actions = new ArrayList<>();
         if(currentBoard.isOver()) return actions;
 
         // Add all of the actions for pieces that the current player owns.
@@ -166,14 +158,14 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
                 addActionsForPiece(currentBoard, piece.getKey(), actions);
         }
 
-        return actions;
+        return Collections.unmodifiableList(actions);
     }
 
     private static Direction[] directions = Direction.values();
 
     /** Helper function: Get all of the actions that the piece at the given position can take. Add
      * it to the provided set. */
-    private void addActionsForPiece(Board board, Position position, Set<Action> actions) {
+    private void addActionsForPiece(Board board, Position position, List<Action> actions) {
         Grid grid = board.getPieces();
         Player currentPlayer = board.getCurrentPlayer();
 

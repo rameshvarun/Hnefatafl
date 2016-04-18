@@ -98,7 +98,7 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
         Assert.assertEquals("We should be in the AI_MOVE state before taking an AI move.", moveState, MoveState.AI_MOVE);
 
         final Player aiPlayer = ((GameType.PlayerVsAI) state.getType()).getAIPlayer();
-        final AIStrategy strategy = new MinimaxStrategy(state.getRuleset(), aiPlayer, 2);
+        final AIStrategy strategy = new MinimaxStrategy(state.getRuleset(), aiPlayer, 4);
 
         final FutureTask<Action> aiTask = new FutureTask<Action>(() -> {
             // Decide the next move

@@ -19,9 +19,8 @@ public class RandomStrategy implements AIStrategy {
     private final Random random = new Random();
 
     @Override
-    public Action decide(History history, Set<Action> actions) {
+    public Action decide(History history, List<Action> actions) {
         assert actions.size() > 0 : "Actions set must not be empty.";
-        List<Action> list = new ArrayList<>(actions);
-        return list.get(random.nextInt(actions.size()));
+        return actions.get(random.nextInt(actions.size()));
     }
 }
