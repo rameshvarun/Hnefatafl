@@ -83,6 +83,16 @@ public class FeltarHnefatafl implements Ruleset, Serializable {
     }
 
     @Override
+    public String getRulesetName() {
+        return "Fetlar Hnefatafl";
+    }
+
+    @Override
+    public String getRulesHTML() {
+        return "file:///android_asset/rules/tablut.html";
+    }
+
+    @Override
     public Board step(History history, Action action, EventHandler eventHandler) {
         Board currentBoard = history.getCurrentBoard();
 

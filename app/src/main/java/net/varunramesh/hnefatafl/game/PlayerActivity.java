@@ -12,12 +12,15 @@ import android.os.Looper;
 import android.os.Message;
 import android.provider.Telephony;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -273,6 +276,32 @@ public class PlayerActivity extends AndroidApplication implements GameHelper.Gam
         final ImageView ok_button = (ImageView)findViewById(R.id.ok_button);
         ok_button.setOnClickListener((View v) -> {
             game.postMessage(HnefataflGame.MESSAGE_CONFIRM_MOVE);
+        });
+
+        // Setup rules button.
+        final ImageView help_button = (ImageView)findViewById(R.id.help_button);
+        help_button.setOnClickListener((View v) -> {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            // alert.setTitle(gameState.getRuleset().getRulesetName() + " Rules");
+
+            WebView wv = new WebView(this);
+            wv.loadUrl(gameState.getRuleset().getRulesHTML());
+            wv.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    view.loadUrl(url);
+                    return false;
+                }
+            });
+
+            alert.setView(wv);
+
+
+            alert.setNegativeButton("Close", (DialogInterface dialog, int id) -> {
+                dialog.dismiss();
+            });
+
+            alert.show();
         });
 
 

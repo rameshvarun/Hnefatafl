@@ -1,11 +1,16 @@
 package net.varunramesh.hnefatafl.simulator;
 
+import com.annimon.stream.Stream;
+
 import java.io.Serializable;
 
 /**
  * Created by varunramesh on 7/22/15.
  */
 public final class Position implements Serializable {
+    /** Static cache of the values of the Direction enum. */
+    private static final Direction[] directions = Direction.values();
+
     private final int x;
     private final int y;
 
@@ -34,6 +39,14 @@ public final class Position implements Serializable {
     /** Returns the manhattan distance to another position */
     public int distanceTo(Position other) {
         return Math.abs(other.x - x) + Math.abs(other.y - y);
+    }
+
+    /** Returns true if a position is the neighbor of the current position. */
+    public boolean isNeighbor(Position other) { return distanceTo(other) == 1; }
+
+    /** Return a stream containing the positions neighboring this point. */
+    public Stream<Position> getNeighborStream() {
+        return Stream.of(directions).map((Direction dir) -> getNeighbor(dir));
     }
 
     public Direction directionTo(Position other) {

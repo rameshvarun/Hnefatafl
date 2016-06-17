@@ -15,6 +15,12 @@ public interface Ruleset {
     /** Get the starting configuration of the board */
     Board getStartingConfiguration();
 
+    /** Get the full name of this ruleset. */
+    String getRulesetName();
+
+    /** Get the HTML description of the rules. */
+    String getRulesHTML();
+
     /**
      * Step the game forward by one action, returning a new Board without modifying the original one.
      * We need to get the entire history, as some rulesets call for draws after perpetual repetition.

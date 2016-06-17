@@ -106,15 +106,8 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                     state.getRuleset().getActions(state.getHistory()));
             Assert.assertNotNull("The AI should not return a null action.", action);
             Log.d(TAG, "AI wants to move " + action.toString());
-            return action;
-        });
-        new Thread(aiTask).start();
 
-        Utils.schedule(() -> {
-            Action action = null;
-            try {
-                action = aiTask.get();
-
+            Utils.schedule(() -> {
                 // Step forward the state, enacting events.
                 Board newBoard = state.getRuleset().step(state.getHistory(), action, this);
                 state.advance(action, newBoard);
@@ -127,12 +120,13 @@ public class HnefataflGame extends ApplicationAdapter implements EventHandler {
                     moveState = MoveState.SELECT_MOVE;
                 }
                 updateCurrentPlayer();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }, 1.0f);
+            }, 0.0f);
+
+            return action;
+        });
+        new Thread(aiTask).start();
+
+
     }
 
     /** Show Winner Dialog **/

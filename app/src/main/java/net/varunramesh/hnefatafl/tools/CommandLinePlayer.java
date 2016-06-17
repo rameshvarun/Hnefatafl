@@ -16,6 +16,7 @@ import net.varunramesh.hnefatafl.simulator.Winner;
 import net.varunramesh.hnefatafl.simulator.rulesets.Brandubh;
 import net.varunramesh.hnefatafl.simulator.rulesets.FeltarHnefatafl;
 import net.varunramesh.hnefatafl.simulator.rulesets.Ruleset;
+import net.varunramesh.hnefatafl.simulator.rulesets.Tablut;
 
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
@@ -89,7 +90,7 @@ public class CommandLinePlayer {
 
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Type three characters. The first character is the ruleset - (F)etlar or (B)randubh.");
+            System.out.println("Type three characters. The first character is the ruleset - (F)etlar, (B)randubh, and (T)ablut.");
             System.out.println("The second character is the attacker's strategy - (R)andom, (M)inimax, (C)MonteCarlo, or (P)layer.");
             System.out.println("The third character is the defender's strategy - (R)andom, (M)inimax, (C)MonteCarlo, or (P)layer.");
 
@@ -102,6 +103,9 @@ public class CommandLinePlayer {
                     break;
                 case 'b':
                     ruleset = new Brandubh();
+                    break;
+                case 't':
+                    ruleset = new Tablut();
                     break;
                 default:
                     throw new UnsupportedOperationException();
