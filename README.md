@@ -1,5 +1,10 @@
 # Hnefatafl
 
+<p align="center">
+<img height="300" src="./screenshots/game-menu.png" />
+<img height="300" src="./screenshots/game-view.png" />
+</p>
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
